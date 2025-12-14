@@ -27,7 +27,13 @@ export default function AppNavigator() {
       <Stack.Navigator>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="Subjects" component={Subjects} />
-        <Stack.Screen name="Flashcards" component={Flashcards} />
+        <Stack.Screen name="Flashcards" component={Flashcards}
+          options={({ route }) => {
+            const subjects = (route?.params as any)?.subjects;
+            const titleSuffix = Array.isArray(subjects) ? subjects.join(', ') : subjects ?? 'All';
+            return { title: `Flashcards — ${titleSuffix}` };
+          }}
+        />
         <Stack.Screen name="Quiz" component={Quiz} />
         <Stack.Screen name="HighScores" component={HighScores} />
         <Stack.Screen name="History" component={History} />
