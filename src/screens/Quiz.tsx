@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
@@ -36,7 +37,26 @@ export default function Quiz({ route }: Props) {
     }
     const next = index + 1;
     if (next >= pool.length) {
-      Alert.alert('Quiz finished', `Score: ${correct ? score + 1 : score}/${pool.length}`);
+      const final = correct ? score + 1 : score;
+      Alert.alert('Quiz finished', `Score: ${final}/${pool.length}`);
+      // save score
+      const record = {
+        id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        subjects: Array.isArray(subjects) ? subjects : 'All',
+        score: final,
+        total: pool.length,
+        date: new Date().toISOString()
+      };
+      try {
+        AsyncStorage.getItem('quiz_scores').then(async (raw) => {
+          const arr = raw ? (JSON.parse(raw) as any[]) : [];
+          arr.push(record);
+          await AsyncStorage.setItem('quiz_scores', JSON.stringify(arr));
+        });
+      } catch (e) {
+        console.warn('Failed to save score', e);
+      }
+
       setIndex(0);
       setScore(0);
     } else setIndex(next);

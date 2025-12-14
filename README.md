@@ -43,12 +43,14 @@ This project now includes a simple flashcard and quiz module to help practice fo
 - **Flashcards**: Tap a card to flip between the prompt and the answer. For shape prompts, a small shape preview is shown. Word problems include a **Show hint** button on the front of the card.
 - **Quiz**: Multiple-choice quiz mode pulls questions from the selected subjects. Select an answer to advance; hints are shown automatically for incorrect word-problem answers.
 
+- **Quiz scoring & history**: When a quiz finishes, the app saves the session (subjects, score, total, timestamp). View top results in **High Scores** or see chronological sessions in **History**. Use **Settings → Clear saved quiz scores** to clear data.
+
 Included data covers the memorization list you provided (Tier 1, Tier 2, Tier 3, ASVAB traps) and example word problems and shapes.
 
 If you'd like:
+
 - I can add persistence for your high scores (saved per subject).
 - I can import an SVG logo and use it for the app icon and splash instead of the generated PNG placeholder.
-
 
 ```
 

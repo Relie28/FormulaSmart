@@ -12,6 +12,9 @@ export default function Home({ navigation }: Props) {
       <Plus color="#3a3563" size={64} />
       <Text style={styles.title}>FormulaSmart Flashcards</Text>
       <View style={styles.buttons}>
+        <Button title="High Scores" onPress={() => navigation.navigate('HighScores')} />
+        <Button title="History" onPress={() => navigation.navigate('History')} />
+        <Button title="Settings" onPress={() => navigation.navigate('Settings')} />
         <Button title="Choose Subjects" onPress={() => navigation.navigate('Subjects')} />
         <Button title="All Flashcards" onPress={() => navigation.navigate('Flashcards', { subjects: 'All' })} />
         <Button title="Take a Quiz" onPress={() => navigation.navigate('Quiz', { subjects: 'All' })} />
