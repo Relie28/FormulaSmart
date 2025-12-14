@@ -1,18 +1,14 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { StyleSheet } from 'react-native';
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Image source={require('./assets/icon.png')} style={styles.logo} />
-      <Text style={styles.title}>FormulaSmart</Text>
-      <View style={styles.iconRow}>
-        <Plus color="#3a3563" size={56} strokeWidth={1.5} />
-        <Text style={styles.iconLabel}>Start solving</Text>
-      </View>
+    <>
+      <AppNavigator />
       <StatusBar style="auto" />
-    </View>
+    </>
   );
 }
 
