@@ -49,6 +49,8 @@ This project now includes a simple flashcard and quiz module to help practice fo
 
 - **Improved flashcard reveals**: When a formula is revealed on a flashcard, the app now shows a short plain-English explanation above the formula (as if you had searched the formula). For word problems, hints list the operation keywords to look for (e.g., "of" → Multiply, "per" → Divide) instead of revealing the formula outright.
 
+- **Content coverage**: The flashcards include all the items you listed (Tier 1, Tier 2, Tier 3). Example topics included: Sum, Difference, Product, Quotient, Average, Percent, Rate/Speed, Ratio, Proportion, PEMDAS, Factors & Multiples, Absolute Value, Squares & Square Roots, Reciprocals, Integers, Shapes, and Word Problems with keyword hints.
+
 - **Flashcards reveal & marking**: In Flashcards mode you must tap **Reveal answer** to see the correct formula. After revealing you cannot go back to previous cards — you must proceed forward. When the answer is revealed choose **I got it** or **I missed it** to record whether you answered that card correctly. At the end of a flashcard session the app saves a session record (subjects, score, total, timestamp) which you can view in **History**.
 
 Included data covers the memorization list you provided (Tier 1, Tier 2, Tier 3, ASVAB traps) and example word problems and shapes.
