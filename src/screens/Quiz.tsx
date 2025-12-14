@@ -11,11 +11,33 @@ function shuffle<T>(arr: T[]) {
     return arr.slice().sort(() => Math.random() - 0.5);
 }
 
-export default function Quiz({ route }: Props) {
+export default function Quiz({ route, navigation }: Props) {
     const subjects = route?.params?.subjects ?? 'All';
     const pool = useMemo(() => shuffle(cardsForSubjects(subjects as any)), [subjects]);
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
+    // ask confirmation when user tries to leave mid-quiz
+    React.useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            const inProgress = index > 0 || score > 0;
+            if (!inProgress) return; // allow leaving if nothing done yet
+
+            // Prevent default behavior of leaving the screen
+            e.preventDefault();
+
+            // Prompt the user before leaving the screen
+            Alert.alert(
+                'Leave quiz?',
+                'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
+                [
+                    { text: "Stay", style: 'cancel', onPress: () => {} },
+                    { text: 'Leave', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) }
+                ]
+            );
+        });
+
+        return unsubscribe;
+    }, [navigation, index, score]);
     const [countsByType, setCountsByType] = useState<Record<string, { correct: number; total: number }>>({ definition: { correct: 0, total: 0 }, shape: { correct: 0, total: 0 }, word: { correct: 0, total: 0 } });
 
     if (!pool.length) return <View style={styles.container}><Text>No cards available for quiz</Text></View>;
