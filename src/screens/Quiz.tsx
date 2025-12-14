@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -16,6 +17,7 @@ export default function Quiz({ route }: Props) {
   const pool = useMemo(() => shuffle(cardsForSubjects(subjects as any)), [subjects]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const insets = useSafeAreaInsets();
 
   if (!pool.length) return <View style={styles.container}><Text>No cards available for quiz</Text></View>;
 
@@ -74,15 +76,16 @@ export default function Quiz({ route }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>{headerText}</Text>
+      <View style={[styles.scoreBox, { top: insets.top + 8 }]}> 
+        <Text style={styles.scoreText}>{score}/{pool.length}</Text>
+      </View>
       <Text style={styles.prompt}>{card.prompt}</Text>
       {choices.map((c) => (
         <TouchableOpacity key={c} style={styles.choice} onPress={() => choose(c)}>
           <Text>{c}</Text>
         </TouchableOpacity>
       ))}
-      <View style={{ marginTop: 18 }}>
-        <Text>Score: {score}</Text>
-      </View>
+      {/* score is shown top-right */}
     </View>
   );
 }
@@ -90,6 +93,20 @@ export default function Quiz({ route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   header: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
+  scoreBox: {
+    position: 'absolute',
+    right: 16,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }
+  },
+  scoreText: { fontWeight: '700' },
   prompt: { fontSize: 16, marginVertical: 12 },
   choice: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 8 }
 });
