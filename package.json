@@ -12,13 +12,15 @@
   "dependencies": {
     "expo": "~54.0.29",
     "expo-status-bar": "~3.0.9",
+    "lucide-react-native": "^0.561.0",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-svg": "^15.15.1"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2",
-    "pngjs": "^6.0.0"
+    "pngjs": "^6.0.0",
+    "typescript": "~5.9.2"
   },
   "private": true
 }
