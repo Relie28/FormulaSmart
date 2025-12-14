@@ -10,35 +10,48 @@ import History from '../screens/History';
 import Settings from '../screens/Settings';
 
 export type RootStackParamList = {
-  Home: undefined;
-  Subjects: undefined;
-  Flashcards: { subjects: string[] | 'All' } | undefined;
-  Quiz: { subjects: string[] | 'All' } | undefined;
-  HighScores: undefined;
-  History: undefined;
-  Settings: undefined;
+    Home: undefined;
+    Subjects: undefined;
+    Flashcards: { subjects: string[] | 'All' } | undefined;
+    Quiz: { subjects: string[] | 'All' } | undefined;
+    HighScores: undefined;
+    History: undefined;
+    Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
-        <Stack.Screen name="Subjects" component={Subjects} />
-        <Stack.Screen name="Flashcards" component={Flashcards}
-          options={({ route }) => {
-            const subjects = (route?.params as any)?.subjects;
-            const titleSuffix = Array.isArray(subjects) ? subjects.join(', ') : subjects ?? 'All';
-            return { title: `Flashcards — ${titleSuffix}` };
-          }}
-        />
-        <Stack.Screen name="Quiz" component={Quiz} />
-        <Stack.Screen name="HighScores" component={HighScores} />
-        <Stack.Screen name="History" component={History} />
-        <Stack.Screen name="Settings" component={Settings} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+    return (
+        <NavigationContainer>
+            <Stack.Navigator>
+                <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+                <Stack.Screen name="Subjects" component={Subjects} />
+                <Stack.Screen name="Flashcards" component={Flashcards} options={({ route }) => {
+                    const subjects = (route?.params as any)?.subjects;
+                                        // If user chose 'All' treat it as 'Flashcard' subject label (not 'All')
+                                        const titleSuffix = Array.isArray(subjects)
+                                            ? subjects.join(', ')
+                                            : subjects === 'All'
+                                            ? 'Flashcard'
+                                            : subjects ?? 'Flashcard';
+                    return { title: `${titleSuffix}` };
+                }} />
+                <Stack.Screen name="Quiz" component={Quiz} />
+                                <Stack.Screen
+                                    name="Quiz"
+                                    component={Quiz}
+                                    options={({ route }) => {
+                                        const subjects = (route?.params as any)?.subjects;
+                                        // Show 'Quiz' when no specific subject is selected (i.e., 'All')
+                                        const titleSuffix = Array.isArray(subjects) ? subjects.join(', ') : subjects === 'All' ? 'Quiz' : subjects ?? 'Quiz';
+                                        return { title: titleSuffix === 'Quiz' ? 'Quiz' : `Quiz — ${titleSuffix}` };
+                                    }}
+                                />
+                <Stack.Screen name="HighScores" component={HighScores} />
+                <Stack.Screen name="History" component={History} />
+                <Stack.Screen name="Settings" component={Settings} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
 }
