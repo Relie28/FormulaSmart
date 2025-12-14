@@ -16,6 +16,7 @@ export default function Quiz({ route }: Props) {
     const pool = useMemo(() => shuffle(cardsForSubjects(subjects as any)), [subjects]);
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
+    const [countsByType, setCountsByType] = useState<Record<string, { correct: number; total: number }>>({ definition: { correct: 0, total: 0 }, shape: { correct: 0, total: 0 }, word: { correct: 0, total: 0 } });
 
     if (!pool.length) return <View style={styles.container}><Text>No cards available for quiz</Text></View>;
 
@@ -32,6 +33,14 @@ export default function Quiz({ route }: Props) {
     function choose(choice: string) {
         const correct = choice === card.answer;
         if (correct) setScore((s) => s + 1);
+        // tally counts by card type
+        const t = card.type;
+        setCountsByType((prev) => {
+            const cur = { ...(prev[t] ?? { correct: 0, total: 0 }) };
+            cur.total += 1;
+            if (correct) cur.correct += 1;
+            return { ...prev, [t]: cur };
+        });
         if (card.type === 'word' && !correct) {
             Alert.alert('Hint', card.hint ?? 'Try to match quantities to a formula');
         }
@@ -47,6 +56,8 @@ export default function Quiz({ route }: Props) {
                 total: pool.length,
                 date: new Date().toISOString(),
                 type: 'quiz'
+            ,
+                countsByType
             };
             try {
                 AsyncStorage.getItem('quiz_scores').then(async (raw) => {

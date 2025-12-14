@@ -45,6 +45,8 @@ This project now includes a simple flashcard and quiz module to help practice fo
 
 - **Quiz scoring & history**: When a quiz finishes, the app saves the session (subjects, score, total, timestamp). View chronological sessions in **History**, and see an overall per-subject strength/weakness summary in **Stats Overview**. Use **Settings → Clear saved quiz scores** to clear data.
 
+- **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Shapes, Word Problems) so you can see where to focus practice.
+
 - **Flashcards reveal & marking**: In Flashcards mode you must tap **Reveal answer** to see the correct formula. After revealing you cannot go back to previous cards — you must proceed forward. When the answer is revealed choose **I got it** or **I missed it** to record whether you answered that card correctly. At the end of a flashcard session the app saves a session record (subjects, score, total, timestamp) which you can view in **History**.
 
 Included data covers the memorization list you provided (Tier 1, Tier 2, Tier 3, ASVAB traps) and example word problems and shapes.

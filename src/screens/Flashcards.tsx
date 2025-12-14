@@ -39,6 +39,16 @@ export default function Flashcards({ route, navigation }: Props) {
             date: new Date().toISOString(),
             type: 'flashcard'
         } as any;
+        // compute counts by type from results using card metadata
+        const countsByType: Record<string, { correct: number; total: number }> = { definition: { correct: 0, total: 0 }, shape: { correct: 0, total: 0 }, word: { correct: 0, total: 0 } };
+        results.forEach((res) => {
+            const cardMeta = cards.find((c) => c.id === res.id);
+            const t = cardMeta ? cardMeta.type : 'definition';
+            if (!countsByType[t]) countsByType[t] = { correct: 0, total: 0 };
+            countsByType[t].total += 1;
+            if (res.correct) countsByType[t].correct += 1;
+        });
+        (record as any).countsByType = countsByType;
 
         try {
             const raw = await AsyncStorage.getItem('flashcard_sessions');
