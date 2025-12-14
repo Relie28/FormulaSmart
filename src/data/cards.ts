@@ -32,21 +32,21 @@ export const subjects = [
 
 export const cards: Card[] = [
   // Arithmetic (formerly Tier 1)
-  { id: 't1-sum', type: 'definition', subject: 'Arithmetic', prompt: 'What is the sum?', answer: 'Sum = a + b (add)' },
-  { id: 't1-diff', type: 'definition', subject: 'Arithmetic', prompt: 'What is the difference?', answer: 'Difference = a − b (subtract)' },
-  { id: 't1-prod', type: 'definition', subject: 'Arithmetic', prompt: 'What is the product?', answer: 'Product = a × b (multiply)' },
-  { id: 't1-quot', type: 'definition', subject: 'Arithmetic', prompt: 'What is the quotient?', answer: 'Quotient = a ÷ b (divide)' },
+  { id: 't1-sum', type: 'definition', subject: 'Arithmetic', prompt: 'What is the sum?', answer: 'Sum = a + b (Addition)' },
+  { id: 't1-diff', type: 'definition', subject: 'Arithmetic', prompt: 'What is the difference?', answer: 'Difference = a − b (Subtraction)' },
+  { id: 't1-prod', type: 'definition', subject: 'Arithmetic', prompt: 'What is the product?', answer: 'Product = a × b (Multiplication)' },
+  { id: 't1-quot', type: 'definition', subject: 'Arithmetic', prompt: 'What is the quotient?', answer: 'Quotient = a ÷ b (Division)' },
   { id: 't1-avg', type: 'definition', subject: 'Arithmetic', prompt: 'How is average (mean) calculated?', answer: 'Average = sum ÷ number of items' },
   { id: 't1-percent', type: 'definition', subject: 'Arithmetic', prompt: 'What is percent?', answer: 'Percent = part ÷ whole — Part = percent × whole — Whole = part ÷ percent' },
   { id: 't1-rate', type: 'definition', subject: 'Arithmetic', prompt: 'What is rate (speed)?', answer: 'Rate = distance ÷ time' },
-  { id: 't1-sum-ex', type: 'word', subject: 'Arithmetic', prompt: 'What is the sum of 4 and 6?', answer: 'Sum = 4 + 6 = 10', hint: 'Sum means add' },
-  { id: 't1-diff-ex', type: 'word', subject: 'Arithmetic', prompt: 'What is the difference between 12 and 7?', answer: 'Difference = 12 − 7 = 5', hint: 'Difference means subtract' },
+  { id: 't1-sum-ex', type: 'word', subject: 'Arithmetic', prompt: 'What is the sum of 4 and 6?', answer: 'Sum = 4 + 6 = 10', hint: 'Sum means addition' },
+  { id: 't1-diff-ex', type: 'word', subject: 'Arithmetic', prompt: 'What is the difference between 12 and 7?', answer: 'Difference = 12 − 7 = 5', hint: 'Difference means subtraction' },
   { id: 't1-percent-ex', type: 'word', subject: 'Arithmetic', prompt: 'What is 20% of 50?', answer: 'Part = percent × whole = 0.2 × 50 = 10', hint: 'Percent → part = percent × whole' },
 
   // Pre-Algebra (formerly Tier 2)
   { id: 't2-ratio', type: 'definition', subject: 'Pre-Algebra', prompt: 'What is a ratio?', answer: 'Ratio = a : b (can be written as a/b)' },
   { id: 't2-prop', type: 'definition', subject: 'Pre-Algebra', prompt: 'What is a proportion?', answer: 'a/b = c/d → cross multiply ad = bc' },
-  { id: 't2-pemdas', type: 'definition', subject: 'Pre-Algebra', prompt: 'What is the order of operations?', answer: 'PEMDAS — Parentheses, Exponents, Multiply/Divide, Add/Subtract' },
+  { id: 't2-pemdas', type: 'definition', subject: 'Pre-Algebra', prompt: 'What is the order of operations?', answer: 'PEMDAS — Parentheses, Exponents, Multiplication/Division, Addition/Subtraction' },
   { id: 't2-factors', type: 'definition', subject: 'Pre-Algebra', prompt: 'What are factors and multiples?', answer: 'Factor divides evenly; Multiple = result of multiplication' },
   { id: 't2-abs', type: 'definition', subject: 'Pre-Algebra', prompt: 'What is absolute value?', answer: '|x| = distance from 0 (always non-negative)' },
   { id: 't2-pemdas-ex', type: 'word', subject: 'Pre-Algebra', prompt: 'Evaluate 3 + 4 × 2', answer: '3 + 4 × 2 = 3 + 8 = 11 (PEMDAS: multiply before add)', hint: 'Order of operations: PEMDAS' },
@@ -166,10 +166,10 @@ export const cards: Card[] = [
   },
 
   // ASVAB traps examples
-  { id: 'asvab-sum', type: 'definition', subject: 'ASVAB', prompt: 'What does sum mean?', answer: 'Add' },
-  { id: 'asvab-diff', type: 'definition', subject: 'ASVAB', prompt: 'What does difference mean?', answer: 'Subtract' },
-  { id: 'asvab-prod', type: 'definition', subject: 'ASVAB', prompt: 'What does product mean?', answer: 'Multiply' },
-  { id: 'asvab-quot', type: 'definition', subject: 'ASVAB', prompt: 'What does quotient mean?', answer: 'Divide' }
+  { id: 'asvab-sum', type: 'definition', subject: 'ASVAB', prompt: 'What does sum mean?', answer: 'Addition' },
+  { id: 'asvab-diff', type: 'definition', subject: 'ASVAB', prompt: 'What does difference mean?', answer: 'Subtraction' },
+  { id: 'asvab-prod', type: 'definition', subject: 'ASVAB', prompt: 'What does product mean?', answer: 'Multiplication' },
+  { id: 'asvab-quot', type: 'definition', subject: 'ASVAB', prompt: 'What does quotient mean?', answer: 'Division' }
 ];
 
 export function cardsForSubjects(subjectSelection: string[] | 'All') {
