@@ -64,7 +64,8 @@ export default function Quiz({ route, navigation }: Props) {
             return { ...prev, [t]: cur };
         });
         if (card.type === 'word' && !correct) {
-            Alert.alert('Hint', card.hint ?? 'Try to match quantities to a formula');
+            const { hintForWordProblem } = require('../utils/wordHints');
+            Alert.alert('Hint', hintForWordProblem(card.prompt));
         }
         const next = index + 1;
         if (next >= pool.length) {

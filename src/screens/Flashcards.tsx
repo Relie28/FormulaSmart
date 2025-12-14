@@ -88,7 +88,15 @@ export default function Flashcards({ route, navigation }: Props) {
                 </Text>
             </View>
 
-            <FlashcardView card={card} revealed={revealed} onReveal={() => setRevealed(true)} onShowHint={() => Alert.alert('Hint', 'Hint: ' + (card.type === 'word' ? card.hint ?? 'Try to identify which formula fits the quantities in the problem.' : ''))} />
+            <FlashcardView card={card} revealed={revealed} onReveal={() => setRevealed(true)} onShowHint={() => {
+                if (card.type === 'word') {
+                    const { hintForWordProblem } = require('../utils/wordHints');
+                    Alert.alert('Hint', hintForWordProblem(card.prompt));
+                } else {
+                    const hint = (card as any).hint ?? 'Try to identify which formula fits the quantities in the problem.';
+                    Alert.alert('Hint', 'Hint: ' + hint);
+                }
+            }} />
 
             {!revealed ? (
                 <View style={[styles.actions, { marginTop: 15 }]}>
