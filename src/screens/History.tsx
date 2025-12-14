@@ -37,7 +37,7 @@ export default function History() {
       ) : (
         <FlatList data={records} keyExtractor={(s) => s.id} renderItem={({ item }) => (
           <View style={styles.row}>
-            <Text style={styles.subjects}>{Array.isArray(item.subjects) ? item.subjects.join(', ') : 'All'}</Text>
+            <Text style={styles.subjects}>{Array.isArray(item.subjects) ? item.subjects.join(', ') : (item.subjects === 'All' ? (item.type === 'flashcard' ? 'Flashcard' : 'Quiz') : String(item.subjects))}</Text>
             <Text style={styles.score}>{item.score}/{item.total} <Text style={{ color: '#888' }}>({item.type})</Text></Text>
             <Text style={styles.date}>{new Date(item.date).toLocaleString()}</Text>
           </View>

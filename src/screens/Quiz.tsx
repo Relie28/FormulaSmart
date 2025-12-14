@@ -39,13 +39,14 @@ export default function Quiz({ route }: Props) {
     if (next >= pool.length) {
       const final = correct ? score + 1 : score;
       Alert.alert('Quiz finished', `Score: ${final}/${pool.length}`);
-      // save score
+      // save score (include type 'quiz' so History can show it clearly)
       const record = {
         id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         subjects: Array.isArray(subjects) ? subjects : 'All',
         score: final,
         total: pool.length,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        type: 'quiz'
       };
       try {
         AsyncStorage.getItem('quiz_scores').then(async (raw) => {
@@ -62,9 +63,17 @@ export default function Quiz({ route }: Props) {
     } else setIndex(next);
   }
 
+  const titleSuffix = Array.isArray(subjects)
+    ? subjects.join(', ')
+    : subjects === 'All'
+    ? 'Quiz'
+    : subjects ?? 'Quiz';
+
+  const headerText = titleSuffix === 'Quiz' ? 'Quiz' : `Quiz — ${titleSuffix}`;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Quiz — {Array.isArray(subjects) ? subjects.join(', ') : 'All'}</Text>
+      <Text style={styles.header}>{headerText}</Text>
       <Text style={styles.prompt}>{card.prompt}</Text>
       {choices.map((c) => (
         <TouchableOpacity key={c} style={styles.choice} onPress={() => choose(c)}>
@@ -73,7 +82,6 @@ export default function Quiz({ route }: Props) {
       ))}
       <View style={{ marginTop: 18 }}>
         <Text>Score: {score}</Text>
-        <Button title="Reset" onPress={() => { setIndex(0); setScore(0); }} />
       </View>
     </View>
   );

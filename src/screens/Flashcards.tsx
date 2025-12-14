@@ -5,10 +5,14 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
 import FlashcardView from '../components/FlashcardView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDeviceSize } from '../utils/device';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Flashcards'>;
 
 export default function Flashcards({ route, navigation }: Props) {
+
+    const { width, height } = useDeviceSize();
+
     const subjects = route?.params?.subjects ?? 'All';
     const pool = cardsForSubjects(subjects as any);
     const [index, setIndex] = useState(0);
@@ -64,13 +68,15 @@ export default function Flashcards({ route, navigation }: Props) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>
-                Subject {Array.isArray(subjects) ? subjects.join(', ') : 'All'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: width - 32, }}>
+                <Text style={[styles.sub, { opacity: 0 }]}>
+                    {index + 1}/{pool.length}
+                </Text>
 
-            <Text style={styles.sub}>
-                Progress: {index + 1}/{pool.length}
-            </Text>
+                <Text style={styles.sub}>
+                    {index + 1}/{pool.length}
+                </Text>
+            </View>
 
             <FlashcardView card={card} revealed={revealed} onReveal={() => setRevealed(true)} onShowHint={() => Alert.alert('Hint', 'Hint: ' + (card.type === 'word' ? card.hint ?? 'Try to identify which formula fits the quantities in the problem.' : ''))} />
 
@@ -91,7 +97,7 @@ export default function Flashcards({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, alignItems: 'center' },
+    container: { width: '100%', flex: 1, padding: 16, alignItems: 'center' },
     header: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
     actions: { flexDirection: 'row', gap: 12, marginTop: 24 },
     sub: { fontSize: 14, color: '#666', marginBottom: 12 }

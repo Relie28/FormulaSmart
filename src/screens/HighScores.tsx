@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type ScoreRecord = { id: string; subjects: string[] | 'All'; score: number; total: number; date: string };
+type ScoreRecord = { id: string; subjects: string[] | 'All'; score: number; total: number; date: string; type?: 'quiz' | 'flashcard' };
 
 export default function HighScores() {
   const [scores, setScores] = useState<ScoreRecord[]>([]);
@@ -28,7 +28,7 @@ export default function HighScores() {
       ) : (
         <FlatList data={scores} keyExtractor={(s) => s.id} renderItem={({ item }) => (
           <View style={styles.row}>
-            <Text style={styles.subjects}>{Array.isArray(item.subjects) ? item.subjects.join(', ') : 'All'}</Text>
+            <Text style={styles.subjects}>{Array.isArray(item.subjects) ? item.subjects.join(', ') : (item.subjects === 'All' ? (item.type === 'flashcard' ? 'Flashcard' : 'Quiz') : String(item.subjects))}</Text>
             <Text style={styles.score}>{item.score}/{item.total}</Text>
             <Text style={styles.date}>{new Date(item.date).toLocaleString()}</Text>
           </View>
