@@ -18,6 +18,21 @@ npm start        # starts Metro and Expo dev tools
 npm run ios      # open iOS simulator
 npm run android  # open Android emulator
 npm run web      # run in browser
+
+# Additional steps for standalone builds and assets
+
+You can generate placeholder app assets (icon, splash, favicon) with the included script:
+
+```bash
+npm run generate-assets
+```
+
+For standalone app builds (recommended with EAS):
+
+1. Install and configure EAS CLI: `npm install -g eas-cli` and `eas login`.
+2. Configure credentials and then run `eas build -p ios` or `eas build -p android`.
+
+Note: `app.json` contains placeholder bundle identifier / package (`com.example.formulasmart`). Update them to your own identifiers before submitting to app stores.
 ```
 
 Notes:

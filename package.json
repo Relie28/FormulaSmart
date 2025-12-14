@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate-assets": "node scripts/generate-logo.js"
   },
   "dependencies": {
     "expo": "~54.0.29",
@@ -16,7 +17,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "pngjs": "^6.0.0"
   },
   "private": true
 }
