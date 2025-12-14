@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
+import { explainFormula } from '../utils/formulaExplain';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
@@ -44,16 +45,46 @@ export default function Quiz({ route, navigation }: Props) {
 
     const card = pool[index % pool.length];
 
-    // build choices: for definition/shape pick other answers as distractors
-    const choices = useMemo(() => {
-        const correct = card.answer;
-        const others = pool.filter((c) => c.id !== card.id).map((c) => c.answer);
-        const picks = shuffle([correct, ...others.slice(0, 3)]);
-        return picks;
+    // build choices: show only the right-hand side of formulas (RHS) or plain-English definitions;
+    // mix formulas and plain-English distractors but only one choice is correct
+    const { choices, correctText } = useMemo(() => {
+        function rhsOf(answer: string) {
+            if (!answer) return '';
+            const parts = String(answer).split('=');
+            if (parts.length >= 2) return parts.slice(1).join('=').trim();
+            return answer.trim();
+        }
+
+        // helper to get a plain-English explanation for a card (prefer explainFormula)
+        function plainOf(c: typeof card) {
+            const expl = explainFormula(c as any);
+            if (expl) return expl;
+            const r = rhsOf(c.answer as string);
+            return `This is calculated as ${r}`;
+        }
+
+        // pick whether the correct answer will be plain-English or RHS (formula)
+        const correctIsPlain = Math.random() < 0.5 && Boolean(plainOf(card));
+        const correctText = correctIsPlain ? plainOf(card) : rhsOf(card.answer as string);
+        // build a pool of distractor texts (mix of plain and rhs from other cards)
+        const distractorPool: string[] = [];
+        pool.filter((c) => c.id !== card.id).forEach((c) => {
+            const r = rhsOf(c.answer as string);
+            const p = plainOf(c as any);
+            if (r) distractorPool.push(r);
+            if (p) distractorPool.push(p);
+        });
+
+        // remove duplicates and the correct text
+        const uniq = Array.from(new Set(distractorPool.filter((t) => t && t !== correctText)));
+
+        const picks = shuffle(uniq).slice(0, 3);
+        const all = shuffle([correctText, ...picks]);
+        return { choices: all, correctText };
     }, [card, pool]);
 
     function choose(choice: string) {
-        const correct = choice === card.answer;
+        const correct = choice === correctText;
         if (correct) setScore((s) => s + 1);
         // tally counts by card type
         const t = card.type;
@@ -63,9 +94,16 @@ export default function Quiz({ route, navigation }: Props) {
             if (correct) cur.correct += 1;
             return { ...prev, [t]: cur };
         });
-        if (card.type === 'word' && !correct) {
-            const { hintForWordProblem } = require('../utils/wordHints');
-            Alert.alert('Hint', hintForWordProblem(card.prompt));
+        if (!correct) {
+            // On wrong answer, show the plain-English definition and the formula (full answer)
+            const plain = explainFormula(card as any) ?? `Definition: ${card.prompt}`;
+            const formula = String(card.answer);
+            let msg = `${plain}\n\nFormula: ${formula}`;
+            if (card.type === 'word') {
+                const { hintForWordProblem } = require('../utils/wordHints');
+                msg += `\n\nHint: ${hintForWordProblem(card.prompt)}`;
+            }
+            Alert.alert('Wrong', msg);
         }
         const next = index + 1;
         if (next >= pool.length) {
