@@ -39,21 +39,21 @@ Note: `app.json` contains placeholder bundle identifier / package (`com.example.
 
 This project now includes a simple flashcard and quiz module to help practice formulas and word problems.
 
-- Open the app and go to **Choose Subjects** to pick one or more subjects (Tier 1, Tier 2, Tier 3, Shapes, Word Problems, ASVAB) or select **All Flashcards** to practice everything.
+- Open the app and go to **Choose Subjects** to pick one or more subjects (Arithmetic, Pre-Algebra, Algebra, Geometry, Word Problems, ASVAB) or select **All Flashcards** to practice everything.
 - **Flashcards**: Tap a card to flip between the prompt and the answer. For shape prompts, a small shape preview is shown. Word problems include a **Show hint** button on the front of the card.
 - **Quiz**: Multiple-choice quiz mode pulls questions from the selected subjects. Select an answer to advance; hints are shown automatically for incorrect word-problem answers.
 
 - **Quiz scoring & history**: When a quiz finishes, the app saves the session (subjects, score, total, timestamp). View chronological sessions in **History**, and see an overall per-subject strength/weakness summary in **Stats Overview**. Use **Settings → Clear saved quiz scores** to clear data.
 
-- **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Shapes, Word Problems) so you can see where to focus practice.
+- **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Geometry, Word Problems) so you can see where to focus practice.
 
 - **Improved flashcard reveals**: When a formula is revealed on a flashcard, the app now shows a short plain-English explanation above the formula (as if you had searched the formula). For word problems, hints list the operation keywords to look for (e.g., "of" → Multiply, "per" → Divide) instead of revealing the formula outright.
 
-- **Content coverage**: The flashcards include all the items you listed (Tier 1, Tier 2, Tier 3). Example topics included: Sum, Difference, Product, Quotient, Average, Percent, Rate/Speed, Ratio, Proportion, PEMDAS, Factors & Multiples, Absolute Value, Squares & Square Roots, Reciprocals, Integers, Shapes, and Word Problems with keyword hints.
+- **Content coverage**: The flashcards include all the items you listed (re-categorized into Arithmetic, Pre-Algebra, and Algebra). Example topics included: Sum, Difference, Product, Quotient, Average, Percent, Rate/Speed, Ratio, Proportion, PEMDAS, Factors & Multiples, Absolute Value, Squares & Square Roots, Reciprocals, Integers, Geometry (shapes), and Word Problems with keyword hints.
 
 - **Flashcards reveal & marking**: In Flashcards mode you must tap **Reveal answer** to see the correct formula. After revealing you cannot go back to previous cards — you must proceed forward. When the answer is revealed choose **I got it** or **I missed it** to record whether you answered that card correctly. At the end of a flashcard session the app saves a session record (subjects, score, total, timestamp) which you can view in **History**.
 
-Included data covers the memorization list you provided (Tier 1, Tier 2, Tier 3, ASVAB traps) and example word problems and shapes.
+Included data covers the memorization list you provided (re-categorized) and example word problems and geometry topics.
 
 If you'd like:
 
