@@ -74,6 +74,10 @@ export const cards: Card[] = [
   { id: 'shape-parallelogram', type: 'shape', subject: 'Geometry', shape: 'Parallelogram', prompt: 'Area of a parallelogram', answer: 'A = base × height' },
   { id: 'shape-trapezoid', type: 'shape', subject: 'Geometry', shape: 'Trapezoid', prompt: 'Area of a trapezoid', answer: 'A = ½ × (b₁ + b₂) × height' },
   { id: 'shape-rhombus', type: 'shape', subject: 'Geometry', shape: 'Rhombus', prompt: 'Area of a rhombus', answer: 'A = ½ × d₁ × d₂ (or base × height)' },
+  { id: 'shape-pentagon', type: 'shape', subject: 'Geometry', shape: 'Pentagon', prompt: 'Area of a pentagon (regular)', answer: 'For regular pentagon use A = 1/2 × perimeter × apothem (or decompose into triangles)' },
+  { id: 'shape-hexagon', type: 'shape', subject: 'Geometry', shape: 'Hexagon', prompt: 'Area of a regular hexagon', answer: 'A = (3√3/2) × s² (for a regular hexagon with side s) — or A = 1/2 × perimeter × apothem' },
+  { id: 'shape-ellipse', type: 'shape', subject: 'Geometry', shape: 'Ellipse', prompt: 'Area of an ellipse', answer: 'A = πab (a and b are the semi-major and semi-minor axes)' },
+  { id: 'shape-kite', type: 'shape', subject: 'Geometry', shape: 'Kite', prompt: 'Area of a kite', answer: 'A = ½ × d₁ × d₂ (half the product of the diagonals)' },
 
   // Geometry: Perimeter & more areas
   { id: 'geom-perim-rect', type: 'definition', subject: 'Geometry', prompt: 'What is the perimeter of a rectangle?', answer: 'P = 2l + 2w' },

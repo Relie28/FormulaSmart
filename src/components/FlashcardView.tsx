@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Svg, { Circle, Rect, Polygon, Line } from 'react-native-svg';
+import Svg, { Circle, Rect, Polygon, Line, Ellipse } from 'react-native-svg';
 import type { Card } from '../data/cards';
 import { explainFormula } from '../utils/formulaExplain';
 import { deviceWidth, useDeviceSize } from '../utils/device';
@@ -11,48 +11,66 @@ function ShapePreview({ card }: { card: Card }) {
 
     const shape = card.shape.toLowerCase();
 
+    
+
+    const strokeProps = { stroke: '#3a3563', strokeWidth: 3, fill: 'none', strokeLinejoin: 'round', strokeLinecap: 'round' } as any;
+
     if (shape === 'circle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Circle cx="50" cy="50" r="30" fill="#3a3563" />
+            <Circle cx="50" cy="50" r="30" {...strokeProps} />
         </Svg>
     );
-
     if (shape === 'rectangle' || shape === 'square') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Rect x="20" y="30" width="60" height="40" fill="#3a3563" />
+            <Rect x="20" y="30" width="60" height="40" {...strokeProps} />
         </Svg>
     );
-
     if (shape === 'triangle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Polygon points="50,20 80,80 20,80" fill="#3a3563" />
+            <Polygon points="50,20 80,80 20,80" {...strokeProps} />
         </Svg>
     );
-
+    if (shape === 'right triangle' || shape === 'right-triangle' || shape === 'righttriangle') return (
+        <Svg width={160} height={160} viewBox="0 0 100 100">
+            <Polygon points="20,80 80,80 20,20" {...strokeProps} />
+            {/* right-angle marker */}
+            <Line x1="30" y1="80" x2="30" y2="70" stroke="#3a3563" strokeWidth={3} />
+            <Line x1="30" y1="70" x2="20" y2="70" stroke="#3a3563" strokeWidth={3} />
+        </Svg>
+    );
     if (shape === 'parallelogram') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Polygon points="20,30 80,30 60,80 0,80" fill="#3a3563" />
+            <Polygon points="20,30 80,30 60,80 0,80" {...strokeProps} />
         </Svg>
     );
-
     if (shape === 'trapezoid') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Polygon points="30,30 70,30 90,80 10,80" fill="#3a3563" />
+            <Polygon points="30,30 70,30 90,80 10,80" {...strokeProps} />
         </Svg>
     );
-
-    if (shape === 'rhombus') return (
+    if (shape === 'rhombus' || shape === 'diamond') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Polygon points="50,15 85,50 50,85 15,50" fill="#3a3563" />
+            <Polygon points="50,15 85,50 50,85 15,50" {...strokeProps} />
         </Svg>
     );
-    
-    if (shape === 'right triangle') return (
+    if (shape === 'pentagon') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
-            <Polygon points="20,80 80,80 20,20" fill="#3a3563" />
-            {/* right-angle marker */}
-            <Line x1="20" y1="80" x2="30" y2="80" stroke="#fff" strokeWidth="3" />
-            <Line x1="20" y1="80" x2="20" y2="70" stroke="#fff" strokeWidth="3" />
+            <Polygon points="50,10 85,35 70,80 30,80 15,35" {...strokeProps} />
+        </Svg>
+    );
+    if (shape === 'hexagon') return (
+        <Svg width={160} height={160} viewBox="0 0 100 100">
+            <Polygon points="50,10 80,25 80,65 50,90 20,65 20,25" {...strokeProps} />
+        </Svg>
+    );
+    if (shape === 'ellipse' || shape === 'oval') return (
+        <Svg width={160} height={160} viewBox="0 0 100 100">
+            <Ellipse cx="50" cy="50" rx="35" ry="23" {...strokeProps} />
+        </Svg>
+    );
+    if (shape === 'kite') return (
+        <Svg width={160} height={160} viewBox="0 0 100 100">
+            <Polygon points="50,15 80,50 50,85 20,50" {...strokeProps} />
         </Svg>
     );
     return null;
@@ -73,14 +91,16 @@ export default function FlashcardView({
     const { height, width } = useDeviceSize();
 
     return (
-        <View style={[styles.card, { marginTop: height/5.3 }]}>
+        <View style={[styles.card, { marginTop: height / 3.8 }]}>
             {!revealed ? (
                 <View style={styles.front}>
+                    <View style={{ position: 'absolute', top: -160 }}>
+                        <ShapePreview card={card} />
+                    </View>
+
                     <Text style={[styles.prompt, { maxWidth, marginBottom: 80 }]}>
                         {card.prompt}
                     </Text>
-                    
-                    <ShapePreview card={card} />
 
                     {card.type === 'word' && (
                         <TouchableOpacity onPress={onShowHint} style={styles.hintButton}>
@@ -92,7 +112,7 @@ export default function FlashcardView({
 
                     <TouchableOpacity onPress={onReveal} style={styles.revealButton}>
                         <Text style={{ color: '#fff' }}>
-                            Reveal answer
+                            Show the card
                         </Text>
                     </TouchableOpacity>
                 </View>
