@@ -25,7 +25,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="Subjects" component={Subjects} />
         <Stack.Screen name="Flashcards" component={Flashcards} />
         <Stack.Screen name="Quiz" component={Quiz} />
