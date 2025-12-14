@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Rect, Polygon } from 'react-native-svg';
 import type { Card } from '../data/cards';
+import { explainFormula } from '../utils/formulaExplain';
 import { deviceWidth } from '../utils/device';
 
 function ShapePreview({ card }: { card: Card }) {
@@ -61,6 +62,16 @@ export default function FlashcardView({
                 </View>
             ) : (
                 <View style={styles.back}>
+                    {(() => {
+                        const expl = explainFormula(card);
+                        if (expl) return <Text style={[styles.explanation, { maxWidth }]}>{expl}</Text>;
+                        // if definition, show a short plain-English line if possible
+                        if (card.type === 'definition') {
+                            const def = card.answer.replace('\n', ' ');
+                            return <Text style={[styles.explanation, { maxWidth }]}>{def}</Text>;
+                        }
+                        return null;
+                    })()}
                     <Text style={[styles.answer, { maxWidth }]}>{card.answer}</Text>
                 </View>
             )}
@@ -77,4 +88,6 @@ const styles = StyleSheet.create({
     hintButton: { marginTop: 12, backgroundColor: '#3a3563', padding: 8, borderRadius: 6 }
     ,
     revealButton: { marginTop: 12, backgroundColor: '#0a84ff', padding: 8, borderRadius: 6 }
+    ,
+    explanation: { fontSize: 16, color: '#333', marginBottom: 8, fontStyle: 'italic', textAlign: 'center' }
 });

@@ -47,6 +47,8 @@ This project now includes a simple flashcard and quiz module to help practice fo
 
 - **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Shapes, Word Problems) so you can see where to focus practice.
 
+- **Improved flashcard reveals**: When a formula is revealed on a flashcard, the app now shows a short plain-English explanation above the formula (as if you had searched the formula). For word problems, hints list the operation keywords to look for (e.g., "of" → Multiply, "per" → Divide) instead of revealing the formula outright.
+
 - **Flashcards reveal & marking**: In Flashcards mode you must tap **Reveal answer** to see the correct formula. After revealing you cannot go back to previous cards — you must proceed forward. When the answer is revealed choose **I got it** or **I missed it** to record whether you answered that card correctly. At the end of a flashcard session the app saves a session record (subjects, score, total, timestamp) which you can view in **History**.
 
 Included data covers the memorization list you provided (Tier 1, Tier 2, Tier 3, ASVAB traps) and example word problems and shapes.
