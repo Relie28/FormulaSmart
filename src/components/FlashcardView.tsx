@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Rect, Polygon } from 'react-native-svg';
 import type { Card } from '../data/cards';
@@ -24,12 +24,20 @@ function ShapePreview({ card }: { card: Card }) {
   return null;
 }
 
-export default function FlashcardView({ card, onShowHint }: { card: Card; onShowHint?: () => void }) {
-  const [showBack, setShowBack] = useState(false);
-
+export default function FlashcardView({
+  card,
+  revealed,
+  onReveal,
+  onShowHint
+}: {
+  card: Card;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowHint?: () => void;
+}) {
   return (
-    <TouchableOpacity onPress={() => setShowBack((s) => !s)} style={styles.card}>
-      {!showBack ? (
+    <View style={styles.card}>
+      {!revealed ? (
         <View style={styles.front}>
           <Text style={styles.prompt}>{card.prompt}</Text>
           <ShapePreview card={card} />
@@ -38,13 +46,16 @@ export default function FlashcardView({ card, onShowHint }: { card: Card; onShow
               <Text style={{ color: '#fff' }}>Show hint</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity onPress={onReveal} style={styles.revealButton}>
+            <Text style={{ color: '#fff' }}>Reveal answer</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.back}>
           <Text style={styles.answer}>{card.answer}</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -55,4 +66,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 18, marginBottom: 12, textAlign: 'center', maxWidth: 320 },
   answer: { fontSize: 18, color: '#3a3563', textAlign: 'center' },
   hintButton: { marginTop: 12, backgroundColor: '#3a3563', padding: 8, borderRadius: 6 }
+  ,
+  revealButton: { marginTop: 12, backgroundColor: '#0a84ff', padding: 8, borderRadius: 6 }
 });

@@ -1,23 +1,22 @@
-import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { Plus } from 'lucide-react-native';
+import { View, Text, StyleSheet, Button } from 'react-native';
+import React from 'react';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function Home({ navigation }: Props) {
   return (
     <View style={styles.container}>
-      <Plus color="#3a3563" size={64} />
-      <Text style={styles.title}>FormulaSmart Flashcards</Text>
+      <Text style={styles.title}>FormulaSmart</Text>
+
       <View style={styles.buttons}>
-        <Button title="High Scores" onPress={() => navigation.navigate('HighScores')} />
-        <Button title="History" onPress={() => navigation.navigate('History')} />
-        <Button title="Settings" onPress={() => navigation.navigate('Settings')} />
+        <Button title="Flashcards" onPress={() => navigation.navigate('Flashcards', { subjects: 'All' })} />
         <Button title="Choose Subjects" onPress={() => navigation.navigate('Subjects')} />
-        <Button title="All Flashcards" onPress={() => navigation.navigate('Flashcards', { subjects: 'All' })} />
         <Button title="Take a Quiz" onPress={() => navigation.navigate('Quiz', { subjects: 'All' })} />
+        <Button title="History" onPress={() => navigation.navigate('History')} />
+        <Button title="High Scores" onPress={() => navigation.navigate('HighScores')} />
+        <Button title="Settings" onPress={() => navigation.navigate('Settings')} />
       </View>
     </View>
   );
