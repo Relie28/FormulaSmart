@@ -15,7 +15,7 @@ export default function Home({ navigation }: Props) {
         <Button title="Choose Subjects" onPress={() => navigation.navigate('Subjects')} />
         <Button title="Take a Quiz" onPress={() => navigation.navigate('Quiz', { subjects: 'All' })} />
         <Button title="History" onPress={() => navigation.navigate('History')} />
-        <Button title="High Scores" onPress={() => navigation.navigate('HighScores')} />
+        <Button title="Stats Overview" onPress={() => navigation.navigate('Stats')} />
         <Button title="Settings" onPress={() => navigation.navigate('Settings')} />
       </View>
     </View>
@@ -29,9 +29,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    marginTop: 12,
-    fontSize: 20,
-    fontWeight: '600'
+    marginBottom: 40,
+    fontSize: 30,
+    fontWeight: '800'
   },
   buttons: {
     marginTop: 24,
