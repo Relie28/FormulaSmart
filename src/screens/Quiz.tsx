@@ -40,6 +40,10 @@ export default function Quiz({ route, navigation }: Props) {
         return unsubscribe;
     }, [navigation, index, score]);
     const [countsByType, setCountsByType] = useState<Record<string, { correct: number; total: number }>>({ definition: { correct: 0, total: 0 }, shape: { correct: 0, total: 0 }, word: { correct: 0, total: 0 } });
+    const [feedbackVisible, setFeedbackVisible] = useState(false);
+    const [feedbackPlain, setFeedbackPlain] = useState<string | null>(null);
+    const [feedbackFormula, setFeedbackFormula] = useState<string | null>(null);
+    const [feedbackIsCorrect, setFeedbackIsCorrect] = useState(false);
 
     if (!pool.length) return <View style={styles.container}><Text>No cards available for quiz</Text></View>;
 
@@ -86,7 +90,7 @@ export default function Quiz({ route, navigation }: Props) {
     function choose(choice: string) {
         const correct = choice === correctText;
         if (correct) setScore((s) => s + 1);
-        // tally counts by card type
+        // tally counts by card type (this records the question as answered)
         const t = card.type;
         setCountsByType((prev) => {
             const cur = { ...(prev[t] ?? { correct: 0, total: 0 }) };
@@ -94,45 +98,52 @@ export default function Quiz({ route, navigation }: Props) {
             if (correct) cur.correct += 1;
             return { ...prev, [t]: cur };
         });
-        if (!correct) {
-            // On wrong answer, show the plain-English definition and the formula (full answer)
-            const plain = explainFormula(card as any) ?? `Definition: ${card.prompt}`;
-            const formula = String(card.answer);
-            let msg = `${plain}\n\nFormula: ${formula}`;
-            if (card.type === 'word') {
-                const { hintForWordProblem } = require('../utils/wordHints');
-                msg += `\n\nHint: ${hintForWordProblem(card.prompt)}`;
-            }
-            Alert.alert('Wrong', msg);
-        }
-        const next = index + 1;
-        if (next >= pool.length) {
-            const final = correct ? score + 1 : score;
-            Alert.alert('Quiz finished', `Score: ${final}/${pool.length}`);
-            // save score (include type 'quiz' so History can show it clearly)
-            const record = {
-                id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-                subjects: Array.isArray(subjects) ? subjects : 'All',
-                score: final,
-                total: pool.length,
-                date: new Date().toISOString(),
-                type: 'quiz'
-            ,
-                countsByType
-            };
-            try {
-                AsyncStorage.getItem('quiz_scores').then(async (raw) => {
-                    const arr = raw ? (JSON.parse(raw) as any[]) : [];
-                    arr.push(record);
-                    await AsyncStorage.setItem('quiz_scores', JSON.stringify(arr));
-                });
-            } catch (e) {
-                console.warn('Failed to save score', e);
-            }
 
-            setIndex(0);
-            setScore(0);
-        } else setIndex(next);
+        // prepare feedback (plain-English + formula) and show a non-counting prompt screen
+        const plain = explainFormula(card as any) ?? `Definition: ${card.prompt}`;
+        const formula = String(card.answer ?? '');
+        setFeedbackPlain(plain);
+        setFeedbackFormula(formula);
+        setFeedbackIsCorrect(correct);
+        setFeedbackVisible(true);
+    }
+
+    async function finishQuiz(finalScore: number) {
+        Alert.alert('Quiz finished', `Score: ${finalScore}/${pool.length}`);
+        const record = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            subjects: Array.isArray(subjects) ? subjects : 'All',
+            score: finalScore,
+            total: pool.length,
+            date: new Date().toISOString(),
+            type: 'quiz',
+            countsByType
+        } as any;
+        try {
+            const raw = await AsyncStorage.getItem('quiz_scores');
+            const arr = raw ? (JSON.parse(raw) as any[]) : [];
+            arr.push(record);
+            await AsyncStorage.setItem('quiz_scores', JSON.stringify(arr));
+        } catch (e) {
+            console.warn('Failed to save score', e);
+        }
+        setIndex(0);
+        setScore(0);
+        setFeedbackVisible(false);
+    }
+
+    function nextFromFeedback() {
+        const next = index + 1;
+        const finalIfLast = score; // score already updated when answered
+        setFeedbackVisible(false);
+        setFeedbackPlain(null);
+        setFeedbackFormula(null);
+        setFeedbackIsCorrect(false);
+        if (next >= pool.length) {
+            finishQuiz(finalIfLast);
+        } else {
+            setIndex(next);
+        }
     }
 
     const titleSuffix = Array.isArray(subjects)
@@ -162,6 +173,22 @@ export default function Quiz({ route, navigation }: Props) {
                     <Text>{c}</Text>
                 </TouchableOpacity>
             ))}
+
+            {feedbackVisible && (
+                <View style={styles.feedbackOverlay}>
+                    <View style={styles.feedbackCard}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>{feedbackIsCorrect ? 'Correct' : 'Explanation'}</Text>
+                        {feedbackPlain ? <Text style={{ marginBottom: 8 }}>{feedbackPlain}</Text> : null}
+                        {/* only show formula if it's meaningfully different from the plain explanation */}
+                        {feedbackFormula && !(feedbackPlain ?? '').toLowerCase().includes((feedbackFormula ?? '').toLowerCase()) ? (
+                            <Text style={{ marginTop: 6, fontStyle: 'italic' }}>Formula: {feedbackFormula}</Text>
+                        ) : null}
+                        <TouchableOpacity style={[styles.revealButton, { marginTop: 12 }]} onPress={nextFromFeedback}>
+                            <Text style={{ color: '#fff' }}>Next</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
         </View>
     );
 }
@@ -171,4 +198,9 @@ const styles = StyleSheet.create({
     header: { fontSize: 18, fontWeight: '600', marginBottom: 8, width: '80%' },
     prompt: { fontSize: 16, marginVertical: 12 },
     choice: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 8 }
+    ,
+    feedbackOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
+    feedbackCard: { backgroundColor: '#fff', padding: 16, borderRadius: 10, width: '85%', maxWidth: 500, alignItems: 'center' }
+    ,
+    revealButton: { marginTop: 12, backgroundColor: '#0a84ff', padding: 8, borderRadius: 6 }
 });
