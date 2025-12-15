@@ -81,11 +81,13 @@ export default function FlashcardView({
     revealed,
     onReveal,
     onShowHint
+    , hideAnswer
 }: {
     card: Card;
     revealed: boolean;
     onReveal: () => void;
     onShowHint?: () => void;
+    hideAnswer?: boolean;
 }) {
     const maxWidth = Math.min(320, Math.round(deviceWidth * 0.9));
     const { height, width } = useDeviceSize();
@@ -128,7 +130,7 @@ export default function FlashcardView({
                         }
                         return null;
                     })()}
-                    <Text style={[styles.answer, { maxWidth }]}>{card.answer}</Text>
+                    {!hideAnswer ? <Text style={[styles.answer, { maxWidth }]}>{card.answer}</Text> : null}
                 </View>
             )}
         </View>

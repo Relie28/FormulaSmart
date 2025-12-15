@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
 import FlashcardView from '../components/FlashcardView';
+import { explainFormula } from '../utils/formulaExplain';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDeviceSize } from '../utils/device';
 
@@ -76,6 +77,9 @@ export default function Flashcards({ route, navigation }: Props) {
         }
     }
 
+    const expl = explainFormula(card);
+    const infoOnly = Boolean(revealed && expl && expl.toLowerCase().startsWith('this formula computes'));
+
     return (
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: width - 32, }}>
@@ -88,7 +92,10 @@ export default function Flashcards({ route, navigation }: Props) {
                 </Text>
             </View>
 
-            <FlashcardView card={card} revealed={revealed} onReveal={() => setRevealed(true)} onShowHint={() => {
+            const expl = explainFormula(card);
+            const infoOnly = Boolean(revealed && expl && expl.toLowerCase().startsWith('this formula computes'));
+
+            <FlashcardView card={card} revealed={revealed} hideAnswer={infoOnly} onReveal={() => setRevealed(true)} onShowHint={() => {
                 if (card.type === 'word') {
                     const { hintForWordProblem } = require('../utils/wordHints');
                     Alert.alert('Hint', hintForWordProblem(card.prompt));
@@ -97,17 +104,25 @@ export default function Flashcards({ route, navigation }: Props) {
                     Alert.alert('Hint', 'Hint: ' + hint);
                 }
             }} />
-
             {!revealed ? (
                 <View style={[styles.actions, { marginTop: 15 }]}>
                     <Text style={{ color: '#666', paddingHorizontal: 20, textAlign: 'center', }}>
                         Tap Reveal answer when ready. You cannot go back after revealing.
                     </Text>
                 </View>
+            ) : infoOnly ? (
+                <View style={styles.actions}>
+                    <Button title="Next" onPress={() => {
+                        // advance without recording a result (info-only prompt)
+                        const next = index + 1;
+                        setRevealed(false);
+                        if (next >= pool.length) finishSession(); else setIndex(next);
+                    }} />
+                </View>
             ) : (
                 <View style={styles.actions}>
-                    <Button title="I missed it" onPress={() => markAnswer(false)} color="#d33" />
-                    <Button title="I got it" onPress={() => markAnswer(true)} />
+                    <Button title="I was wrong 😕" onPress={() => markAnswer(false)} color="#d33" />
+                    <Button title="Got it right 😇" onPress={() => markAnswer(true)} />
                 </View>
             )}
         </View>
@@ -117,6 +132,6 @@ export default function Flashcards({ route, navigation }: Props) {
 const styles = StyleSheet.create({
     container: { width: '100%', flex: 1, padding: 16, alignItems: 'center' },
     header: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-    actions: { flexDirection: 'row', gap: 12, marginTop: 24 },
+    actions: { flexDirection: 'row', gap: 65, marginTop: 55 },
     sub: { fontSize: 14, color: '#666', marginBottom: 12 }
 });
