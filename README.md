@@ -75,6 +75,16 @@ Note: `development` profile is configured for internal/distribution dev-client b
 
 Note: `app.json` contains placeholder bundle identifier / package (`com.example.formulasmart`). Update them to your own identifiers before submitting to app stores.
 
+## Troubleshooting EAS build installs (peer dependency errors)
+
+If an EAS build fails during install with errors like ERESOLVE (peer dependency conflicts), common fixes are:
+
+- Update devDependencies so they line up with your `react` version (e.g., bump `react-test-renderer` to a React-19-compatible release when using React 19).
+- If you can't immediately update a package, use `--legacy-peer-deps` when installing in CI as a temporary workaround (not ideal long-term).
+- Avoid installing dev dependencies on production build nodes when unnecessary; prefer `npm ci --omit=dev` in those contexts.
+
+Example: the build log may show `react-test-renderer@18.x` requiring React 18 while your project uses React 19; updating `react-test-renderer` to a 19.x release usually resolves the conflict.
+
 ## Flashcards & Quiz
 
 This project now includes a simple flashcard and quiz module to help practice formulas and word problems.
