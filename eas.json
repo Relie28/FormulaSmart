@@ -1,19 +1,44 @@
 {
+  "cli": {
+    "version": ">=7.3.0",
+    "appVersionSource": "remote"
+  },
   "build": {
-    "production": {
-      "releaseChannel": "production"
-    },
-    "staging": {
-      "releaseChannel": "staging"
+    "fast": {
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "channel": "fast"
     },
     "development": {
-      "developmentClient": true,
+      "extends": "fast",
       "distribution": "internal",
-      "releaseChannel": "development"
+      "developmentClient": true,
+      "channel": "default",
+      "environment": "development"
+    },
+    "staging": {
+      "distribution": "internal",
+      "extends": "fast",
+      "channel": "staging",
+      "autoIncrement": true,
+      "environment": "preview"
+    },
+    "testing": {
+      "distribution": "internal",
+      "extends": "fast",
+      "channel": "testing",
+      "autoIncrement": true,
+      "environment": "development"
+    },
+    "production": {
+      "extends": "fast",
+      "channel": "production",
+      "autoIncrement": true,
+      "environment": "production",
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      }
     }
-  },
-  "cli": {
-    "version": ">= 2.0.0",
-    "appVersionSource": "git"
   }
 }
