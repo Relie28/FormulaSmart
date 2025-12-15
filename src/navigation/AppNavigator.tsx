@@ -17,6 +17,7 @@ export type RootStackParamList = {
     Stats: undefined;
     History: undefined;
     Settings: undefined;
+    DebugLogs: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,6 +40,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Stats" component={StatsOverview} />
                 <Stack.Screen name="History" component={History} />
                 <Stack.Screen name="Settings" component={Settings} />
+                <Stack.Screen name="DebugLogs" component={require('../screens/DebugLogs').default} options={{ title: 'Debug Logs' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

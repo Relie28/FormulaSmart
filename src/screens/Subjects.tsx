@@ -22,10 +22,12 @@ export default function Subjects({ navigation }: Props) {
                 Select a subject
             </Text>
 
-            <View style={{ height: height/1.65, }}>
+            <View style={{ height: height/1.50, }}>
                 <FlatList
                     data={subjects}
                     keyExtractor={(s) => s}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                     renderItem={({ item }) => (
                         <TouchableOpacity onPress={() => toggle(item)} style={[styles.item, selected.includes(item) && styles.selected]}>
                             <Text>

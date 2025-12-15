@@ -7,11 +7,20 @@ import AppNavigator from './src/navigation/AppNavigator';
 export default function App() {
   // Global error handler to capture unexpected native/host errors and make
   // it easy to copy/paste stack traces when they occur in the running app.
-  React.useEffect(() => {
+    React.useEffect(() => {
     const globalHandler = (error: any, isFatal?: boolean) => {
       try {
         // Log to console (Metro / device logs)
         console.error('GlobalErrorHandler:', error, 'isFatal:', isFatal);
+        // Persist to storage for post-mortem debugging
+        (async () => {
+          try {
+            const raw = await AsyncStorage.getItem('flashcards_debug');
+            const arr = raw ? JSON.parse(raw) : [];
+            arr.push({ at: new Date().toISOString(), msg: `GlobalErrorHandler: ${String(error && (error.stack || error.message || error))}`, isFatal: !!isFatal });
+            await AsyncStorage.setItem('flashcards_debug', JSON.stringify(arr));
+          } catch (e) { /* ignore */ }
+        })();
         // Show a simple alert so users can copy the error message/stack
         Alert.alert('Unexpected error', String(error && (error.stack || error.message || error)), [{ text: 'OK' }]);
       } catch (e) {

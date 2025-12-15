@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
+import { buildAsvabPool, computeAfqtEstimate } from '../utils/asvab';
 import { explainFormula } from '../utils/formulaExplain';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
@@ -14,6 +15,7 @@ function shuffle<T>(arr: T[]) {
 
 export default function Quiz({ route, navigation }: Props) {
     const subjects = route?.params?.subjects ?? 'All';
+    const isAsvabSelected = Array.isArray(subjects) ? (subjects as string[]).includes('ASVAB') : (subjects as any) === 'ASVAB';
     const pool = useMemo(() => shuffle(cardsForSubjects(subjects as any)), [subjects]);
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -26,13 +28,20 @@ export default function Quiz({ route, navigation }: Props) {
             // Prevent default behavior of leaving the screen
             e.preventDefault();
 
+            // capture the action so the closure does not rely on `e` later
+            const action = e?.data?.action;
+
             // Prompt the user before leaving the screen
             Alert.alert(
                 'Leave quiz?',
                 'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
                 [
                     { text: "Stay", style: 'cancel', onPress: () => {} },
-                    { text: 'Leave', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) }
+                    { text: 'Leave', style: 'destructive', onPress: async () => {
+                        // use safeDispatch to avoid throwing if action is undefined or dispatch fails
+                        const safe = require('../utils/safeDispatch').default;
+                        await safe(navigation, action);
+                    } }
                 ]
             );
         });
@@ -108,6 +117,94 @@ export default function Quiz({ route, navigation }: Props) {
         setFeedbackVisible(true);
     }
 
+    // ASVAB special mode: if ASVAB was selected, allow starting a timed 30-minute 45-question test
+    const [asvabActive, setAsvabActive] = useState(false);
+    const [asvabQuestions, setAsvabQuestions] = useState<typeof pool>([]);
+    const [asvabIndex, setAsvabIndex] = useState(0);
+    const [asvabScore, setAsvabScore] = useState(0);
+    const [secondsLeft, setSecondsLeft] = useState(30 * 60);
+    const [afqtHistory, setAfqtHistory] = useState<any[] | null>(null);
+
+    // Memoize ASVAB choices so they are stable while viewing a question.
+    // This must be declared unconditionally (not inside a conditional render)
+    // to preserve hook order across renders.
+    const { choices: asvabChoices, correctText: asvabCorrectText } = React.useMemo(() => {
+        if (!asvabQuestions || !asvabQuestions.length) return { choices: [] as string[], correctText: '' };
+        const card = asvabQuestions[asvabIndex];
+        function rhsOf(answer: string) {
+            if (!answer) return '';
+            const parts = String(answer).split('=');
+            if (parts.length >= 2) return parts.slice(1).join('=').trim();
+            return answer.trim();
+        }
+        function plainOf(c: typeof card) {
+            const expl = explainFormula(c as any);
+            if (expl) return expl;
+            const r = rhsOf(c.answer as string);
+            return `This is calculated as ${r}`;
+        }
+        const correctIsPlain = Math.random() < 0.5 && Boolean(plainOf(card));
+        const correctText = correctIsPlain ? plainOf(card) : rhsOf(card.answer as string);
+        const distractorPool: string[] = [];
+        asvabQuestions.filter((c) => c.id !== card.id).forEach((c) => {
+            const r = rhsOf(c.answer as string);
+            const p = plainOf(c as any);
+            if (r) distractorPool.push(r);
+            if (p) distractorPool.push(p);
+        });
+        const uniq = Array.from(new Set(distractorPool.filter((t) => t && t !== correctText)));
+        const picks = shuffle(uniq).slice(0, 3);
+        const all = shuffle([correctText, ...picks]);
+        return { choices: all, correctText };
+    }, [asvabIndex, asvabQuestions]);
+
+    // timer effect for ASVAB when active
+    React.useEffect(() => {
+        if (!asvabActive) return;
+        if (secondsLeft <= 0) {
+            // time up, finish
+            finishAsvab(asvabScore, asvabQuestions.length);
+            return;
+        }
+        const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+        return () => clearTimeout(t);
+    }, [asvabActive, secondsLeft]);
+
+    function startAsvab() {
+        const q = buildAsvabPool(cards, 45, 10);
+        setAsvabQuestions(q);
+        setAsvabActive(true);
+        setAsvabIndex(0);
+        setAsvabScore(0);
+        setSecondsLeft(30 * 60);
+    }
+
+    async function finishAsvab(finalCorrect: number, totalQuestions: number) {
+        const afqt = computeAfqtEstimate(finalCorrect, totalQuestions);
+        const record = { id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`, score: afqt, correct: finalCorrect, total: totalQuestions, date: new Date().toISOString() };
+        try {
+            const raw = await AsyncStorage.getItem('afqt_scores');
+            const arr = raw ? (JSON.parse(raw) as any[]) : [];
+            arr.push(record);
+            await AsyncStorage.setItem('afqt_scores', JSON.stringify(arr));
+        } catch (e) {
+            console.warn('Failed to save AFQT score', e);
+        }
+        setAsvabActive(false);
+        setAfqtHistory(null); // clear cache so it'll reload if user opens history
+        Alert.alert('ASVAB test finished', `Estimated AFQT: ${afqt} (score ${finalCorrect}/${totalQuestions})`);
+    }
+
+    async function loadAfqtHistory() {
+        try {
+            const raw = await AsyncStorage.getItem('afqt_scores');
+            const arr = raw ? (JSON.parse(raw) as any[]) : [];
+            setAfqtHistory(arr.reverse());
+        } catch (e) {
+            console.warn('Failed to load AFQT history', e);
+        }
+    }
+
     async function finishQuiz(finalScore: number) {
         Alert.alert('Quiz finished', `Score: ${finalScore}/${pool.length}`);
         const record = {
@@ -153,6 +250,64 @@ export default function Quiz({ route, navigation }: Props) {
             : subjects ?? 'Quiz';
 
     const headerText = titleSuffix === 'Quiz' ? 'Find the formula' : `${titleSuffix}`;
+
+    // ASVAB special rendering
+    if (isAsvabSelected && !asvabActive) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.header}>ASVAB Practice Test</Text>
+                <Text style={{ marginBottom: 12 }}>This is a timed 30-minute practice test of 45 questions drawn from Arithmetic Reasoning and Math Knowledge (we'll include word problems).</Text>
+                <Button title="Start ASVAB Practice Test" onPress={startAsvab} />
+                <View style={{ height: 12 }} />
+                <Button title="View AFQT History" onPress={() => loadAfqtHistory()} />
+                {afqtHistory ? (
+                    <View style={{ marginTop: 12 }}>
+                        {afqtHistory.length === 0 ? <Text>No AFQT scores yet</Text> : afqtHistory.slice(0, 5).map((r: any) => (
+                            <Text key={r.id}>{new Date(r.date).toLocaleDateString()}: {r.score} ({r.correct}/{r.total})</Text>
+                        ))}
+                    </View>
+                ) : null}
+            </View>
+        );
+    }
+
+    if (isAsvabSelected && asvabActive) {
+        const card = asvabQuestions[asvabIndex];
+
+        // Use the memoized ASVAB choices computed above; they are stable while the
+        // question is active even if the timer ticks.
+        const choices = asvabChoices;
+        const correctText = asvabCorrectText;
+
+        function chooseAsvab(choice: string) {
+            const correct = choice === correctText;
+            if (correct) setAsvabScore((s) => s + 1);
+            // advance
+            const next = asvabIndex + 1;
+            if (next >= asvabQuestions.length) {
+                finishAsvab(asvabScore + (correct ? 1 : 0), asvabQuestions.length);
+            } else {
+                setAsvabIndex(next);
+            }
+        }
+
+        return (
+            <View style={styles.container}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                    <Text>ASVAB Test</Text>
+                    <Text>Time: {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}</Text>
+                </View>
+
+                <Text style={styles.prompt}>Question {asvabIndex + 1}/{asvabQuestions.length}</Text>
+                <Text style={styles.prompt}>{card.prompt}</Text>
+                {choices.map((c) => (
+                    <TouchableOpacity key={c} style={styles.choice} onPress={() => chooseAsvab(c)}>
+                        <Text>{c}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>

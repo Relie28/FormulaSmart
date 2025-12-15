@@ -21,10 +21,14 @@ export type Card =
 export const subjects = [
   'Arithmetic',
   'Pre-Algebra',
+  'Fractions',
+  'Decimals',
+  'Mixed Numbers',
   'Algebra',
   'Geometry',
   'Word Problems',
   'Memorize',
+  'Solve for X',
   'ASVAB',
   'Motion',
   'Work'
@@ -171,6 +175,26 @@ export const cards: Card[] = [
     answer: 'Rate = distance ÷ time = 90 ÷ 1.5 = 60 (mph)',
     hint: 'Rate = distance ÷ time'
   },
+
+  // Fractions
+  { id: 'frac-def', type: 'definition', subject: 'Fractions', prompt: 'What is a fraction?', answer: 'A fraction represents part of a whole: numerator/denominator' },
+  { id: 'frac-simplify', type: 'word', subject: 'Fractions', prompt: 'Simplify the fraction 8/12.', answer: '8/12 = 2/3', hint: 'Divide numerator and denominator by GCD (4)' },
+  { id: 'frac-add', type: 'word', subject: 'Fractions', prompt: 'Add 1/3 + 1/4.', answer: '1/3 + 1/4 = 4/12 + 3/12 = 7/12', hint: 'Find common denominator' },
+
+  // Decimals
+  { id: 'dec-def', type: 'definition', subject: 'Decimals', prompt: 'What is a decimal?', answer: 'A decimal represents a fraction with denominator a power of 10 (e.g., 0.5 = 1/2)' },
+  { id: 'dec-add', type: 'word', subject: 'Decimals', prompt: 'Add 0.75 + 0.2', answer: '0.75 + 0.2 = 0.95', hint: 'Align decimal points' },
+  { id: 'dec-mul', type: 'word', subject: 'Decimals', prompt: 'Multiply 0.5 × 0.4', answer: '0.5 × 0.4 = 0.20 = 0.2', hint: 'Multiply and count decimal places' },
+
+  // Mixed Numbers
+  { id: 'mixed-def', type: 'definition', subject: 'Mixed Numbers', prompt: 'What is a mixed number?', answer: 'A mixed number has a whole part and a fractional part (e.g., 1 1/2)' },
+  { id: 'mixed-to-improper', type: 'word', subject: 'Mixed Numbers', prompt: 'Convert 2 3/4 to an improper fraction.', answer: '2 3/4 = (2×4 + 3)/4 = 11/4', hint: 'Multiply whole by denominator and add numerator' },
+  { id: 'mixed-add', type: 'word', subject: 'Mixed Numbers', prompt: 'Add 1 1/2 + 2 2/3', answer: '1 1/2 + 2 2/3 = 3 7/6 = 4 1/6', hint: 'Convert to improper fractions or add whole and fractional parts carefully' },
+
+  // Solve for X (basic algebraic equations)
+  { id: 'solve-1', type: 'word', subject: 'Solve for X', prompt: 'Solve for x: 2x + 3 = 11', answer: '2x = 8 → x = 4', hint: 'Isolate x: subtract then divide' },
+  { id: 'solve-2', type: 'word', subject: 'Solve for X', prompt: 'Solve for x: 3x − 5 = 10', answer: '3x = 15 → x = 5', hint: 'Add 5 then divide by 3' },
+  { id: 'solve-3', type: 'word', subject: 'Solve for X', prompt: 'Solve for x: (x/4) + 2 = 5', answer: 'x/4 = 3 → x = 12', hint: 'Subtract then multiply by 4' },
 
   // ASVAB traps examples
   { id: 'asvab-sum', type: 'definition', subject: 'ASVAB', prompt: 'What does sum mean?', answer: 'Addition' },
