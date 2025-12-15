@@ -35,6 +35,18 @@ export function explainFormula(card: Card): string | null {
 
   if (card.type === 'definition') {
     const p = card.prompt.toLowerCase();
+    // helper: try to detect a shape mentioned in the card (prompt or answer)
+    function detectShape() {
+      const shapes = ['right triangle', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite'];
+      const hay = (card.prompt + ' ' + card.answer).toLowerCase();
+      if ((card as any).shape) {
+        const s = String((card as any).shape).toLowerCase();
+        if (shapes.includes(s)) return s;
+      }
+      for (const s of shapes) if (hay.includes(s)) return s;
+      return null;
+    }
+    const detectedShape = detectShape();
     if (p.includes('sum')) return 'A sum is the total you get when you add two or more numbers together.';
     if (p.includes('difference')) return 'The difference is the result when you subtract one number from another.';
     if (p.includes('product')) return 'A product is the result of multiplying two or more numbers together.';
@@ -110,6 +122,10 @@ export function explainFormula(card: Card): string | null {
         const rhsWords = tokenReplace(rhs);
         // friendly label for common left-hand symbols
         const lhsName = (lhs.match(/\bA\b/i) && 'area') || (lhs.match(/\bP\b/i) && 'perimeter') || (lhs.match(/\bC\b/i) && 'circumference') || (lhs.match(/\bV\b/i) && 'volume') || lhs;
+        // if we detected a shape, mention it explicitly: 'The area of a rectangle is calculated as...'
+        if (detectedShape) {
+          return `The ${lhsName} of a ${detectedShape} is calculated as ${rhsWords}.`;
+        }
         return `The ${lhsName} is calculated as ${rhsWords}.`;
       }
 
