@@ -28,6 +28,12 @@ export function explainFormula(card: Card): string | null {
         return 'An ellipse is like a stretched circle — its area is A = π × a × b where a and b are the semi-major and semi-minor axes.';
       case 'kite':
         return 'A kite is a quadrilateral with two pairs of adjacent equal sides; its area is half the product of its diagonals: A = ½ × d₁ × d₂.';
+      case 'cube':
+        return 'The volume of a cube is the side length cubed — V = s³ (multiply the side by itself three times).';
+      case 'rectangular solid':
+        return 'The volume of a rectangular solid is length × width × height — V = l × w × h (multiply the three side lengths).';
+      case 'cylinder':
+        return 'The volume of a cylinder is the area of its circular base times its height: V = π r² h.';
       default:
         return null;
     }
@@ -47,10 +53,58 @@ export function explainFormula(card: Card): string | null {
       return null;
     }
     const detectedShape = detectShape();
+
+    // If a specific shape is detected and the prompt asks about area/perimeter/diagonal/circumference,
+    // return a shape-specific plain-English explanation so definitions in Geometry are accurate.
+    if (detectedShape) {
+      if (p.includes('area')) {
+        switch (detectedShape) {
+          case 'square':
+            return 'The area of a square is the side length squared — multiply the side by itself.';
+          case 'rectangle':
+            return 'The area of a rectangle is width multiplied by height — multiply the two side lengths to get the area.';
+          case 'circle':
+            return 'The area of a circle is pi times the square of the radius — it measures the space inside the circle.';
+          case 'triangle':
+            return 'The area of a triangle is one half times the base times the height — multiply base and height and divide by two.';
+          case 'parallelogram':
+            return 'The area of a parallelogram is base times height — similar to a rectangle once you drop a perpendicular height.';
+          case 'trapezoid':
+            return 'The area of a trapezoid is half the sum of the bases times the height: A = ½ × (b₁ + b₂) × h.';
+          case 'rhombus':
+            return 'A rhombus has equal sides; area can be found by A = ½ × d₁ × d₂ (half the product of the diagonals) or base × height.';
+          case 'pentagon':
+            return 'For a regular pentagon, area can be found using the apothem and perimeter: A = ½ × perimeter × apothem, or split into triangles.';
+          case 'hexagon':
+            return 'A regular hexagon area can be calculated as A = (3√3/2) × s² (s is side length), or A = ½ × perimeter × apothem.';
+          case 'ellipse':
+            return 'An ellipse is like a stretched circle — its area is A = π × a × b where a and b are the semi-major and semi-minor axes.';
+          case 'kite':
+            return 'A kite is a quadrilateral with two pairs of adjacent equal sides; its area is half the product of its diagonals: A = ½ × d₁ × d₂.';
+        }
+      }
+      if (p.includes('perimeter')) {
+        if (detectedShape === 'rectangle') return 'Perimeter of a rectangle is P = 2l + 2w (add twice the length and twice the width).';
+        if (detectedShape === 'square') return 'Perimeter of a square is P = 4s (add four equal sides or multiply one side by 4).';
+        return 'Perimeter is the total distance around a shape — add up the lengths of all sides.';
+      }
+      if (p.includes('diagonal')) {
+        return 'Diagonal of rectangles and squares comes from the Pythagorean theorem: d = √(l² + w²) (square: d = s√2).';
+      }
+      if (p.includes('circumference') || detectedShape === 'circle') {
+        return 'Circumference is the distance around a circle: C = 2πr (or C = πd).';
+      }
+    }
     if (p.includes('sum')) return 'A sum is the total you get when you add two or more numbers together.';
     if (p.includes('difference')) return 'The difference is the result when you subtract one number from another.';
     if (p.includes('product')) return 'A product is the result of multiplying two or more numbers together.';
     if (p.includes('quotient')) return 'A quotient is the result of dividing one number by another.';
+    if (p.includes('ratio')) return 'A ratio compares two quantities: a to b (written a:b) or as a fraction a/b.';
+    if (p.includes('proportion')) return 'A proportion states that two ratios are equal; solve using cross-multiplication (ad = bc).';
+    if (p.includes('order of operations') || p.includes('pemdas')) return 'Order of operations (PEMDAS) tells which operations to perform first: Parentheses, Exponents, Multiplication/Division, Addition/Subtraction.';
+    if (p.includes('factor') || p.includes('multiple')) return 'Factors are numbers that divide evenly into a number; multiples are numbers obtained by multiplying.';
+    if (p.includes('absolute value')) return 'Absolute value |x| is the distance of x from zero on the number line; it is always non-negative.';
+    if (p.includes('reciprocal')) return 'The reciprocal of a number a/b is b/a — multiplying a number by its reciprocal gives 1.';
     if (p.includes('average') || p.includes('mean')) return 'Average (mean) is the total of all values divided by the number of values.';
     if (p.includes('percent')) return 'Percent expresses a part out of 100 (25% = 25 out of 100 = 0.25 as a decimal); use part = percent × whole or whole = part ÷ percent.';
     if (p.includes('rate') || p.includes('speed')) return 'Rate (speed) describes how much per unit time — typically speed = distance ÷ time.';
@@ -65,7 +119,7 @@ export function explainFormula(card: Card): string | null {
     if (p.includes('pythagorean') || p.includes('pythagor')) return 'The Pythagorean theorem relates the sides of a right triangle: a² + b² = c² (c is the hypotenuse). Use it to find a missing side or diagonals.';
     if (p.includes('diagonal')) return 'A diagonal of a rectangle or square is found using the Pythagorean theorem: d = √(l² + w²) (for a square, d = s√2).';
     if (p.includes('work')) return 'Work problems combine rates: total work = (sum of individual rates) × time; use additive rates when multiple workers contribute.';
-    if (p.includes('exponent') || p.includes('square root') || p.includes('square')) return 'Exponents show repeated multiplication (x² = x × x); square root is the inverse (√x is the number which when squared gives x).';
+    if (p.includes('exponent') || p.includes('square root') || /\bsquared\b|\bx\^?2\b|\b\d+\^2\b/.test(p)) return 'Exponents show repeated multiplication (x² = x × x); square root is the inverse (√x is the number which when squared gives x).';
     // fallback: if the answer looks like a formula (contains = or × or / or π) then
     // try to convert the right-hand expression into a plain-English explanation
     if (/=|×|\*|\/|π|r\^?2|\^2/.test(card.answer)) {

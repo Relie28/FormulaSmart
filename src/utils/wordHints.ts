@@ -1,12 +1,21 @@
 export const wordTrapMap: Record<string, string> = {
-  sum: 'Add',
-  difference: 'Subtract',
-  product: 'Multiply',
-  quotient: 'Divide',
-  'increased by': 'Add',
-  'decreased by': 'Subtract',
-  of: 'Multiply',
-  per: 'Divide'
+  sum: 'Addition',
+  difference: 'Subtraction',
+  product: 'Multiplication',
+  quotient: 'Division',
+  'increased by': 'Addition',
+  'decreased by': 'Subtraction',
+  of: 'Multiplication',
+  per: 'Division',
+  perimeter: 'Look for lengths to add (sum of side lengths)',
+  circumference: 'Look for radius/diameter to use circle formulas (C = 2πr)',
+  radius: 'Radius relates to diameter: d = 2r',
+  diameter: 'Diameter relates to radius: d = 2r',
+  volume: 'Look for 3-dimensional measurement (use V = lbh or V = πr²h)',
+  speed: 'Speed = distance ÷ time',
+  velocity: 'Speed / velocity = distance ÷ time',
+  rate: 'Rate = distance ÷ time',
+  work: 'Work = rate × time (combine rates when multiple workers)'
 };
 
 export function hintForWordProblem(prompt: string) {

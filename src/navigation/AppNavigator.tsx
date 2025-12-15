@@ -29,10 +29,10 @@ export default function AppNavigator() {
                 <Stack.Screen name="Subjects" component={Subjects} />
                 <Stack.Screen name="Flashcards" component={Flashcards} options={({ route }) => {
                     const subjects = (route?.params as any)?.subjects;
-                                        // If user chose 'All' treat it as 'Flashcard' subject label (not 'All')
-                                        const titleSuffix = Array.isArray(subjects)
-                                            ? subjects.join(', ')
-                                            : subjects === 'All' ? 'Flashcard' : subjects ?? 'Flashcard';
+                    // If user chose 'All' treat it as 'Flashcard' subject label (not 'All')
+                    const titleSuffix = Array.isArray(subjects)
+                        ? subjects.join(', ')
+                        : subjects === 'All' ? 'Flashcards' : subjects ?? 'Flashcards';
                     return { title: `${titleSuffix}` };
                 }} />
                 <Stack.Screen name="Quiz" component={Quiz} />

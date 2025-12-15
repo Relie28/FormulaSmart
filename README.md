@@ -33,6 +33,46 @@ For standalone app builds (recommended with EAS):
 1. Install and configure EAS CLI: `npm install -g eas-cli` and `eas login`.
 2. Configure credentials and then run `eas build -p ios` or `eas build -p android`.
 
+### Over-the-air updates (EAS Update)
+
+We use EAS Update to publish OTA updates to environment-specific branches. The `eas.json` file includes `production`, `staging`, and `development` build profiles which point to their respective release channels. You can publish updates to these channels with the included npm scripts:
+
+```bash
+# Publish a staging update
+npm run eas:publish:staging
+
+# Publish a development update (development builds)
+npm run eas:publish:development
+
+# Publish a production update
+npm run eas:publish:production
+```
+
+These commands use `eas update --branch <branch>` under the hood; builds created with the matching profile will fetch updates from the corresponding branch.
+
+### Building with EAS (per-environment)
+
+You can run the following npm scripts to invoke `eas build` for each environment and platform:
+
+```bash
+# Build staging for both platforms
+npm run eas:build:staging
+
+# Build staging for iOS only
+npm run eas:build:staging:ios
+
+# Build staging for Android only
+npm run eas:build:staging:android
+
+# Build development dev-client (both platforms)
+npm run eas:build:development
+
+# Build production (both platforms)
+npm run eas:build:production
+```
+
+Note: `development` profile is configured for internal/distribution dev-client builds (see `eas.json`). For production and staging builds you'll need appropriate credentials configured in EAS.
+
 Note: `app.json` contains placeholder bundle identifier / package (`com.example.formulasmart`). Update them to your own identifiers before submitting to app stores.
 
 ## Flashcards & Quiz
@@ -47,7 +87,7 @@ This project now includes a simple flashcard and quiz module to help practice fo
 
 - **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Geometry, Word Problems) so you can see where to focus practice.
 
-- **Improved flashcard reveals**: When a formula is revealed on a flashcard, the app now shows a short plain-English explanation above the formula (as if you had searched the formula). For word problems, hints list the operation keywords to look for (e.g., "of" → Multiply, "per" → Divide) instead of revealing the formula outright.
+- **Improved flashcard reveals**: When a formula is revealed on a flashcard, the app now shows a short plain-English explanation above the formula (as if you had searched the formula). For word problems, hints list the operation keywords to look for (e.g., "of" → Multiplication, "per" → Division) instead of revealing the formula outright.
 
 - **Content coverage**: The flashcards include all the items you listed (re-categorized into Arithmetic, Pre-Algebra, and Algebra). Example topics included: Sum, Difference, Product, Quotient, Average, Percent, Rate/Speed, Ratio, Proportion, PEMDAS, Factors & Multiples, Absolute Value, Squares & Square Roots, Reciprocals, Integers, Geometry (shapes), and Word Problems with keyword hints.
 

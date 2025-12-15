@@ -83,19 +83,16 @@ export default function Flashcards({ route, navigation }: Props) {
     return (
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: width - 32, }}>
-                <Text style={[styles.sub, { opacity: 0 }]}>
-                    {index + 1}/{pool.length}
-                </Text>
+                <Text style={[styles.sub, { opacity: 0 }] }>
+                        {index + 1}/{pool.length}
+                    </Text>
 
-                <Text style={styles.sub}>
-                    {index + 1}/{pool.length}
-                </Text>
-            </View>
+                    <Text style={styles.sub}>
+                        {index + 1}/{pool.length}
+                    </Text>
+                </View>
 
-            const expl = explainFormula(card);
-            const infoOnly = Boolean(revealed && expl && expl.toLowerCase().startsWith('this formula computes'));
-
-            <FlashcardView card={card} revealed={revealed} hideAnswer={infoOnly} onReveal={() => setRevealed(true)} onShowHint={() => {
+                <FlashcardView card={card} revealed={revealed} hideAnswer={infoOnly} onReveal={() => setRevealed(true)} onShowHint={() => {
                 if (card.type === 'word') {
                     const { hintForWordProblem } = require('../utils/wordHints');
                     Alert.alert('Hint', hintForWordProblem(card.prompt));

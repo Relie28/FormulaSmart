@@ -54,7 +54,6 @@ export default function History() {
                             Final score: {item.score}/{item.total}
                         </Text>
 
-
                         <Text style={styles.date}>
                             {new Date(item.date).toLocaleString()}
                         </Text>
