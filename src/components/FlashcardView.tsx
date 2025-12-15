@@ -9,7 +9,7 @@ function ShapePreview({ card }: { card: Card }) {
 
     // determine shape from explicit shape card or from prompt/answer text on definition/word cards
     let shape: string | null = null;
-    const candidates = ['right triangle', 'right-triangle', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite', 'cylinder'];
+    const candidates = ['right triangle', 'right-triangle', 'rectangular solid', 'rectangular', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite', 'cylinder', 'cube'];
     if (card.type === 'shape') {
         shape = (card.shape || '').toLowerCase();
     } else {
@@ -51,6 +51,23 @@ function ShapePreview({ card }: { card: Card }) {
             )}
         </Svg>
     );
+    // rectangular solid (volume) depiction when volume context appears
+    if ((shape === 'rectangle' || shape === 'rectangular solid') && showVolume) return (
+        <Svg width={180} height={140} viewBox="0 0 180 140">
+            {/* top face */}
+            <Polygon points="50,20 140,20 160,40 70,40" {...strokeProps} />
+            {/* front face */}
+            <Polygon points="50,20 70,40 70,100 50,80" {...strokeProps} />
+            <Polygon points="70,40 160,40 160,100 70,100" {...strokeProps} />
+            {/* labels */}
+            <SvgText x="30" y="60" fontSize="10" fill="#3a3563">l</SvgText>
+            <SvgText x="120" y="12" fontSize="10" fill="#3a3563">w</SvgText>
+            <SvgText x="165" y="70" fontSize="10" fill="#3a3563">h</SvgText>
+            {/* volume formula label */}
+            <SvgText x="90" y="130" fontSize="11" fill="#3a3563" textAnchor="middle">V = l × w × h</SvgText>
+        </Svg>
+    );
+
     if (shape === 'rectangle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Rect x="20" y="30" width="60" height="40" {...strokeProps} />
@@ -60,6 +77,18 @@ function ShapePreview({ card }: { card: Card }) {
                     <SvgText x="84" y="50" fontSize="8" fill="#3a3563">w</SvgText>
                 </>
             ) : null}
+        </Svg>
+    );
+    if (shape === 'square' && showVolume) return (
+        // render a cube representation for volume contexts
+        <Svg width={180} height={140} viewBox="0 0 180 140">
+            <Polygon points="60,20 120,20 140,40 80,40" {...strokeProps} />
+            <Polygon points="60,20 80,40 80,100 60,80" {...strokeProps} />
+            <Polygon points="80,40 140,40 140,100 80,100" {...strokeProps} />
+            <SvgText x="40" y="60" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="90" y="12" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="145" y="70" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="90" y="130" fontSize="11" fill="#3a3563" textAnchor="middle">V = s³</SvgText>
         </Svg>
     );
     if (shape === 'square') return (
