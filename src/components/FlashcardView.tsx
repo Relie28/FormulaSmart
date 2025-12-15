@@ -67,6 +67,18 @@ function ShapePreview({ card }: { card: Card }) {
             <SvgText x="90" y="130" fontSize="11" fill="#3a3563" textAnchor="middle">V = l × w × h</SvgText>
         </Svg>
     );
+    if (shape === 'cube') return (
+        // render a cube representation for cubic contexts
+        <Svg width={180} height={140} viewBox="0 0 180 140">
+            <Polygon points="60,20 120,20 140,40 80,40" {...strokeProps} />
+            <Polygon points="60,20 80,40 80,100 60,80" {...strokeProps} />
+            <Polygon points="80,40 140,40 140,100 80,100" {...strokeProps} />
+            <SvgText x="40" y="60" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="90" y="12" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="145" y="70" fontSize="10" fill="#3a3563">s</SvgText>
+            <SvgText x="90" y="130" fontSize="11" fill="#3a3563" textAnchor="middle">V = s³</SvgText>
+        </Svg>
+    );
 
     if (shape === 'rectangle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">

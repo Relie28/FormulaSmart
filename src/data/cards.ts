@@ -78,6 +78,9 @@ export const cards: Card[] = [
   { id: 'shape-hexagon', type: 'shape', subject: 'Geometry', shape: 'Hexagon', prompt: 'Area of a regular hexagon', answer: 'A = (3√3/2) × s² (for a regular hexagon with side s) — or A = 1/2 × perimeter × apothem' },
   { id: 'shape-ellipse', type: 'shape', subject: 'Geometry', shape: 'Ellipse', prompt: 'Area of an ellipse', answer: 'A = πab (a and b are the semi-major and semi-minor axes)' },
   { id: 'shape-kite', type: 'shape', subject: 'Geometry', shape: 'Kite', prompt: 'Area of a kite', answer: 'A = ½ × d₁ × d₂ (half the product of the diagonals)' },
+  { id: 'shape-cube', type: 'shape', subject: 'Geometry', shape: 'Cube', prompt: 'Volume of a cube', answer: 'V = s³' },
+  { id: 'shape-rect-solid', type: 'shape', subject: 'Geometry', shape: 'Rectangular solid', prompt: 'Volume of a rectangular solid', answer: 'V = l × w × h' },
+  { id: 'shape-cylinder', type: 'shape', subject: 'Geometry', shape: 'Cylinder', prompt: 'Volume of a cylinder', answer: 'V = π r² h' },
 
   // Geometry: Perimeter & more areas
   { id: 'geom-perim-rect', type: 'definition', subject: 'Geometry', prompt: 'What is the perimeter of a rectangle?', answer: 'P = 2l + 2w' },
