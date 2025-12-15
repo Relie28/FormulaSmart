@@ -7,9 +7,18 @@ import { deviceWidth, useDeviceSize } from '../utils/device';
 
 function ShapePreview({ card }: { card: Card }) {
 
-    if (card.type !== 'shape') return null;
-
-    const shape = card.shape.toLowerCase();
+    // determine shape from explicit shape card or from prompt/answer text on definition/word cards
+    let shape: string | null = null;
+    const candidates = ['right triangle', 'right-triangle', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite'];
+    if (card.type === 'shape') {
+        shape = (card.shape || '').toLowerCase();
+    } else {
+        const hay = ((card.prompt || '') + ' ' + (card.answer || '')).toLowerCase();
+        for (const c of candidates) {
+            if (hay.includes(c)) { shape = c; break; }
+        }
+    }
+    if (!shape) return null;
 
     
 
@@ -20,9 +29,14 @@ function ShapePreview({ card }: { card: Card }) {
             <Circle cx="50" cy="50" r="30" {...strokeProps} />
         </Svg>
     );
-    if (shape === 'rectangle' || shape === 'square') return (
+    if (shape === 'rectangle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Rect x="20" y="30" width="60" height="40" {...strokeProps} />
+        </Svg>
+    );
+    if (shape === 'square') return (
+        <Svg width={160} height={160} viewBox="0 0 100 100">
+            <Rect x="20" y="20" width="60" height="60" {...strokeProps} />
         </Svg>
     );
     if (shape === 'triangle') return (
@@ -96,9 +110,9 @@ export default function FlashcardView({
         <View style={[styles.card, { marginTop: height / 3.8 }]}>
             {!revealed ? (
                 <View style={styles.front}>
-                    <View style={{ position: 'absolute', top: -160 }}>
-                        <ShapePreview card={card} />
-                    </View>
+                            <View style={{ position: 'absolute', top: -160 }}>
+                                <ShapePreview card={card} />
+                            </View>
 
                     <Text style={[styles.prompt, { maxWidth, marginBottom: 80 }]}>
                         {card.prompt}
@@ -120,6 +134,9 @@ export default function FlashcardView({
                 </View>
             ) : (
                 <View style={styles.back}>
+                    <View style={{ position: 'absolute', top: -160 }}>
+                        <ShapePreview card={card} />
+                    </View>
                     {(() => {
                         const expl = explainFormula(card);
                         if (expl) return <Text style={[styles.explanation, { maxWidth }]}>{expl}</Text>;
