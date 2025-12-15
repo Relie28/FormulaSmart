@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Svg, { Circle, Rect, Polygon, Line, Ellipse } from 'react-native-svg';
+import Svg, { Circle, Rect, Polygon, Line, Ellipse, Text as SvgText } from 'react-native-svg';
 import type { Card } from '../data/cards';
 import { explainFormula } from '../utils/formulaExplain';
 import { deviceWidth, useDeviceSize } from '../utils/device';
@@ -9,7 +9,7 @@ function ShapePreview({ card }: { card: Card }) {
 
     // determine shape from explicit shape card or from prompt/answer text on definition/word cards
     let shape: string | null = null;
-    const candidates = ['right triangle', 'right-triangle', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite'];
+    const candidates = ['right triangle', 'right-triangle', 'square', 'rectangle', 'circle', 'triangle', 'parallelogram', 'trapezoid', 'rhombus', 'pentagon', 'hexagon', 'ellipse', 'oval', 'kite', 'cylinder'];
     if (card.type === 'shape') {
         shape = (card.shape || '').toLowerCase();
     } else {
@@ -20,23 +20,52 @@ function ShapePreview({ card }: { card: Card }) {
     }
     if (!shape) return null;
 
+    const hay = ((card.prompt || '') + ' ' + (card.answer || '')).toLowerCase();
+    const showRadius = /radius|circumference|diameter/.test(hay);
+    const showDiameter = /diameter|diagonal/.test(hay);
+    const showCirc = /circumference/.test(hay);
+    const showVolume = /volume|v =|cylinder/.test(hay);
+
     
 
     const strokeProps = { stroke: '#3a3563', strokeWidth: 3, fill: 'none', strokeLinejoin: 'round', strokeLinecap: 'round' } as any;
 
+    // circle with optional radius/diameter/circumference annotation
     if (shape === 'circle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Circle cx="50" cy="50" r="30" {...strokeProps} />
+            {showRadius && (
+                <>
+                    <Line x1="50" y1="50" x2="80" y2="50" stroke="#3a3563" strokeWidth={2} />
+                    <SvgText x="66" y="46" fontSize="8" fill="#3a3563">r</SvgText>
+                </>
+            )}
+            {showDiameter && (
+                <>
+                    <Line x1="20" y1="50" x2="80" y2="50" stroke="#3a3563" strokeWidth={1} strokeDasharray="2,2" />
+                    <SvgText x="48" y="44" fontSize="8" fill="#3a3563">d</SvgText>
+                </>
+            )}
+            {showCirc && (
+                <SvgText x="50" y="95" fontSize="9" fill="#3a3563" textAnchor="middle">C = 2πr</SvgText>
+            )}
         </Svg>
     );
     if (shape === 'rectangle') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Rect x="20" y="30" width="60" height="40" {...strokeProps} />
+            {showVolume || hay.includes('perimeter') ? (
+                <>
+                    <SvgText x="50" y="28" fontSize="8" fill="#3a3563" textAnchor="middle">l</SvgText>
+                    <SvgText x="84" y="50" fontSize="8" fill="#3a3563">w</SvgText>
+                </>
+            ) : null}
         </Svg>
     );
     if (shape === 'square') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Rect x="20" y="20" width="60" height="60" {...strokeProps} />
+            {showVolume ? <SvgText x="50" y="18" fontSize="8" fill="#3a3563" textAnchor="middle">s</SvgText> : null}
         </Svg>
     );
     if (shape === 'triangle') return (
@@ -80,6 +109,17 @@ function ShapePreview({ card }: { card: Card }) {
     if (shape === 'ellipse' || shape === 'oval') return (
         <Svg width={160} height={160} viewBox="0 0 100 100">
             <Ellipse cx="50" cy="50" rx="35" ry="23" {...strokeProps} />
+            {showVolume ? <SvgText x="50" y="18" fontSize="8" fill="#3a3563" textAnchor="middle">a,b</SvgText> : null}
+        </Svg>
+    );
+    if (shape === 'cylinder') return (
+        <Svg width={160} height={160} viewBox="0 0 100 120">
+            <Ellipse cx="60" cy="25" rx="28" ry="10" {...strokeProps} />
+            <Rect x="32" y="25" width="56" height="60" {...strokeProps} />
+            <Ellipse cx="60" cy="85" rx="28" ry="10" strokeDasharray="2,2" stroke="#3a3563" fill="none" />
+            {/* labels */}
+            <SvgText x="86" y="40" fontSize="8" fill="#3a3563">h</SvgText>
+            <SvgText x="40" y="22" fontSize="8" fill="#3a3563">r</SvgText>
         </Svg>
     );
     if (shape === 'kite') return (
