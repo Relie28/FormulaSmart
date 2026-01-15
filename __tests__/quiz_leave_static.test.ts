@@ -22,5 +22,9 @@ describe('Quiz leave confirmation static checks', () => {
         expect(src.includes('gestureEnabled')).toBeTruthy();
         expect(src.includes('BackHandler.addEventListener')).toBeTruthy();
         expect(src.includes('headerLeft')).toBeTruthy();
+        // ensure handlers are only installed when focused
+        expect(src.includes('isFocused')).toBeTruthy();
+        // ensure we avoid re-prompting once leaving has been confirmed
+        expect(src.includes('isLeavingRef.current') || src.includes('already confirmed')).toBeTruthy();
     });
 });

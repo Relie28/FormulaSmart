@@ -31,10 +31,10 @@ describe('safeDispatch', () => {
   });
 
   it('navigates to Home when action undefined and navigate available', async () => {
-    const nav = { dispatch: jest.fn(), navigate: jest.fn() } as any;
+    const nav = { dispatch: jest.fn(), navigate: jest.fn(), goBack: jest.fn() } as any;
     (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('[]');
     await safeDispatch(nav, undefined);
-    expect(nav.navigate).toHaveBeenCalledWith('Home');
+    expect(nav.goBack).toHaveBeenCalled();
   });
 
   it('persists an error when dispatch throws', async () => {

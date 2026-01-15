@@ -157,6 +157,26 @@ Each distractor generator attempts to preserve units (e.g., "$", "%", "mph") and
 
 - If the user attempts to navigate away mid-quiz (Flashcards or ASVAB), the app shows a confirmation alert "Leave quiz?" warning that progress will be lost. This is implemented via a `beforeRemove` listener in `src/screens/Quiz.tsx` and respects both normal quizzes and an active ASVAB test.
 
+- Implementation details (important for web parity):
+  - We only prompt the Leave confirmation when the quiz is genuinely "in-progress": this is true if the ASVAB timer is running (ASVAB active) or the user has submitted at least one answer in the current quiz (`hasSubmitted`). This avoids prompting when the user hasn't begun answering questions.
+  - All gesture, header-back and hardware-back interception is scoped to when the `Quiz` screen is focused (we use `useFocusEffect` and `navigation.isFocused()` guards). This prevents other screens from having their back behavior affected.
+  - When the user confirms Leave we prefer to call `navigation.goBack()` to return to the previous screen. If `goBack` is not available we fall back to `safeDispatch` which will navigate to `Home` as a last resort.
+  - To avoid a double-prompt loop (native pop re-triggering the `beforeRemove` listener), we set an internal `isLeavingRef` flag when the user confirms Leave and the listener will not re-prompt if that flag is set.
+
+### Files & tests related to the Leave flow
+
+- `src/screens/Quiz.tsx` — focus-scoped BackHandler, header-left back button, `beforeRemove` listener, `hasSubmitted` and `isLeavingRef` guards.
+- `src/utils/quizUtils.ts` — `isQuizInProgress(...)` helper (unit-tested) that now respects `hasSubmitted` and ASVAB active state.
+- `src/utils/navigationUtils.ts` — `shouldPromptLeave(...)` helper (unit-tested) that combines focus + in-progress checks and `hasSubmitted` to decide whether to prompt.
+- Tests:
+  - `__tests__/quizUtils.test.ts` — verifies `isQuizInProgress` behavior with `hasSubmitted` and ASVAB flags.
+  - `__tests__/navigationUtils.test.ts` — verifies `shouldPromptLeave` behavior for focus and submission cases.
+  - `__tests__/quiz_leave_static.test.ts` — static assertions for the presence of focus and isLeaving guards and back/gesture handling.
+
+### Porting the Leave behavior to Web
+
+When implementing web behavior, port `isQuizInProgress` and `shouldPromptLeave` helpers first. Use `history.back()`/router goBack equivalents for navigation on web, and wire your beforeunload or in-app back handlers to consult `shouldPromptLeave` so the confirmation behavior is identical across platforms.
+
 ### Files of interest
 
 - `src/utils/choiceGenerator.ts` — choice generation algorithm and distractor types.

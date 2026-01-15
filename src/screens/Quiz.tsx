@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
@@ -26,10 +27,17 @@ export default function Quiz({ route, navigation }: Props) {
     const [asvabActive, setAsvabActive] = useState(false);
     // ask confirmation when user tries to leave mid-quiz
     const asvabActiveRef = React.useRef(false);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+    const isLeavingRef = React.useRef(false);
 
     React.useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-            const inProgress = isQuizInProgress(index, score, asvabActiveRef.current || false);
+            // If we've already confirmed leaving, allow the removal without prompting
+            if (isLeavingRef.current) return;
+            // If the screen is no longer focused (navigation already moved), don't prompt
+            if (!navigation.isFocused || !navigation.isFocused()) return;
+            const should = require('../utils/navigationUtils').shouldPromptLeave;
+            const inProgress = should(index, score, asvabActiveRef.current || false, true, hasSubmitted);
             if (!inProgress) return; // allow leaving if nothing done yet
 
             // Prevent default behavior of leaving the screen
@@ -45,7 +53,15 @@ export default function Quiz({ route, navigation }: Props) {
                 [
                     { text: "Stay", style: 'cancel', onPress: () => {} },
                     { text: 'Leave', style: 'destructive', onPress: async () => {
-                        // use safeDispatch to avoid throwing if action is undefined or dispatch fails
+                        // mark that we've confirmed leaving so we don't re-prompt
+                        isLeavingRef.current = true;
+                        try {
+                            if (navigation && typeof navigation.goBack === 'function') {
+                                navigation.goBack();
+                                return;
+                            }
+                        } catch (e) { /* ignore */ }
+                        // fallback to safeDispatch
                         const safe = require('../utils/safeDispatch').default;
                         await safe(navigation, action);
                     } }
@@ -57,62 +73,86 @@ export default function Quiz({ route, navigation }: Props) {
     }, [navigation, index, score]);
 
     // Prevent native-stack's swipe/back race by disabling gestures and installing a custom
-    // header/back handler and BackHandler while a quiz is in progress.
-    React.useEffect(() => {
-        const prevent = isQuizInProgress(index, score, asvabActiveRef.current || asvabActive);
-        // set options to disable swipe gesture when preventing
-        navigation.setOptions({ gestureEnabled: !prevent });
+    // header/back handler and BackHandler while a quiz is in focus and in progress.
+    useFocusEffect(
+        React.useCallback(() => {
+            const prevent = isQuizInProgress(index, score, asvabActiveRef.current || asvabActive, hasSubmitted);
+            // only set options when the screen is focused
+            if (navigation.isFocused && navigation.isFocused()) {
+                navigation.setOptions({ gestureEnabled: !prevent });
+            }
 
-        // install hardware back handler on Android when preventing
-        let backSub: any = null;
-        if (prevent) {
-            backSub = BackHandler.addEventListener('hardwareBackPress', () => {
-                Alert.alert(
-                    'Leave quiz?',
-                    'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
-                    [
-                        { text: 'Stay', style: 'cancel', onPress: () => {} },
-                        { text: 'Leave', style: 'destructive', onPress: async () => {
-                            const safe = require('../utils/safeDispatch').default;
-                            await safe(navigation, undefined);
-                        } }
-                    ]
-                );
-                return true; // consume the back event
-            });
-        }
+            // install hardware back handler on Android when preventing and focused
+            let backSub: any = null;
+            if (prevent && navigation.isFocused && navigation.isFocused()) {
+                backSub = BackHandler.addEventListener('hardwareBackPress', () => {
+                    // If the screen lost focus before the alert would be shown, do nothing
+                    if (!navigation.isFocused || !navigation.isFocused()) return true;
+                    Alert.alert(
+                        'Leave quiz?',
+                        'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
+                        [
+                            { text: 'Stay', style: 'cancel', onPress: () => {} },
+                            { text: 'Leave', style: 'destructive', onPress: async () => {
+                                // mark leaving to prevent duplicate prompts
+                                isLeavingRef.current = true;
+                                try {
+                                    if (navigation && typeof navigation.goBack === 'function') {
+                                        navigation.goBack();
+                                        return;
+                                    }
+                                } catch (e) { /* ignore */ }
+                                const safe = require('../utils/safeDispatch').default;
+                                await safe(navigation, undefined);
+                            } }
+                        ]
+                    );
+                    return true; // consume the back event
+                });
+            }
 
-        // add a custom headerLeft back button when preventing (ensures JS handles back first)
-        if (prevent) {
-            navigation.setOptions({
-                headerLeft: () => (
-                    <TouchableOpacity onPress={() => {
-                        Alert.alert(
-                            'Leave quiz?',
-                            'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
-                            [
-                                { text: 'Stay', style: 'cancel', onPress: () => {} },
-                                { text: 'Leave', style: 'destructive', onPress: async () => {
-                                    const safe = require('../utils/safeDispatch').default;
-                                    await safe(navigation, undefined);
-                                } }
-                            ]
-                        );
-                    }} style={{ paddingHorizontal: 12 }}>
-                        <Text style={{ color: '#0a84ff' }}>Back</Text>
-                    </TouchableOpacity>
-                )
-            });
-        } else {
-            navigation.setOptions({ headerLeft: undefined });
-        }
+            // add a custom headerLeft back button when preventing and focused (ensures JS handles back first)
+            if (prevent && navigation.isFocused && navigation.isFocused()) {
+                navigation.setOptions({
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => {
+                            if (!navigation.isFocused || !navigation.isFocused()) return;
+                            Alert.alert(
+                                'Leave quiz?',
+                                'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
+                                [
+                                    { text: 'Stay', style: 'cancel', onPress: () => {} },
+                                    { text: 'Leave', style: 'destructive', onPress: async () => {
+                                        isLeavingRef.current = true;
+                                        try {
+                                            if (navigation && typeof navigation.goBack === 'function') {
+                                                navigation.goBack();
+                                                return;
+                                            }
+                                        } catch (e) { /* ignore */ }
+                                        const safe = require('../utils/safeDispatch').default;
+                                        await safe(navigation, undefined);
+                                    } }
+                                ]
+                            );
+                        }} style={{ paddingHorizontal: 12 }}>
+                            <Text style={{ color: '#0a84ff' }}>Back</Text>
+                        </TouchableOpacity>
+                    )
+                });
+            } else if (navigation.isFocused && navigation.isFocused()) {
+                navigation.setOptions({ headerLeft: undefined });
+            }
 
-        return () => {
-            if (backSub) backSub.remove && backSub.remove();
-            // restore gesture
-            navigation.setOptions({ gestureEnabled: true, headerLeft: undefined });
-        };
-    }, [navigation, index, score, asvabActive]);
+            return () => {
+                if (backSub) backSub.remove && backSub.remove();
+                // restore gesture when focus ends
+                if (navigation.isFocused && navigation.isFocused()) {
+                    navigation.setOptions({ gestureEnabled: true, headerLeft: undefined });
+                }
+            };
+        }, [navigation, index, score, asvabActive, hasSubmitted])
+    );
 
     // keep a ref in sync so the listener above sees up-to-date ASVAB state
     // (see below) we update asvabActiveRef after asvabActive is declared
@@ -154,6 +194,7 @@ export default function Quiz({ route, navigation }: Props) {
     }, [card, pool]);
 
     function choose(choice: string) {
+        setHasSubmitted(true);
         const correct = choice === correctText;
         if (correct) setScore((s) => s + 1);
         // tally counts by card type (this records the question as answered)
@@ -187,6 +228,13 @@ export default function Quiz({ route, navigation }: Props) {
 
     // keep a ref in sync so the beforeRemove listener sees up-to-date ASVAB state
     React.useEffect(() => { asvabActiveRef.current = asvabActive; }, [asvabActive]);
+
+    // Reset the leaving flag when the screen regains focus or when a quiz session ends
+    React.useEffect(() => {
+        if (!navigation.isFocused || !navigation.isFocused()) {
+            isLeavingRef.current = false;
+        }
+    }, [navigation.isFocused]);
 
     // Memoize ASVAB choices so they are stable while viewing a question.
     // This must be declared unconditionally (not inside a conditional render)

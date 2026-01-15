@@ -13,7 +13,11 @@ export default async function safeDispatch(navigation: any, action?: any) {
             // As a last-resort fallback, try navigating to Home if available so
             // the UI can recover gracefully instead of crashing the app.
             try {
-                if (navigation && typeof navigation.navigate === 'function') {
+                // Prefer a simple goBack to return the user to the previous screen.
+                if (navigation && typeof navigation.goBack === 'function') {
+                    navigation.goBack();
+                } else if (navigation && typeof navigation.navigate === 'function') {
+                    // Fallback to Home if goBack is not available
                     navigation.navigate('Home');
                 }
             } catch (e) { /* ignore */ }
