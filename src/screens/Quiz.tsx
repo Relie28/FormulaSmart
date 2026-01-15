@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BackHandler } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
 import { computeAfqtEstimate } from '../utils/asvab';
 import AdaptiveSection from '../utils/adaptiveAsvab';
 import { generateChoices } from '../utils/choiceGenerator';
+import { isQuizInProgress } from '../utils/quizUtils';
 import { explainFormula } from '../utils/formulaExplain';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
@@ -21,12 +23,13 @@ export default function Quiz({ route, navigation }: Props) {
     const pool = useMemo(() => shuffle(cardsForSubjects(subjects as any)), [subjects]);
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
+    const [asvabActive, setAsvabActive] = useState(false);
     // ask confirmation when user tries to leave mid-quiz
     const asvabActiveRef = React.useRef(false);
 
     React.useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-            const inProgress = index > 0 || score > 0 || asvabActiveRef.current;
+            const inProgress = isQuizInProgress(index, score, asvabActiveRef.current || false);
             if (!inProgress) return; // allow leaving if nothing done yet
 
             // Prevent default behavior of leaving the screen
@@ -52,6 +55,64 @@ export default function Quiz({ route, navigation }: Props) {
 
         return unsubscribe;
     }, [navigation, index, score]);
+
+    // Prevent native-stack's swipe/back race by disabling gestures and installing a custom
+    // header/back handler and BackHandler while a quiz is in progress.
+    React.useEffect(() => {
+        const prevent = isQuizInProgress(index, score, asvabActiveRef.current || asvabActive);
+        // set options to disable swipe gesture when preventing
+        navigation.setOptions({ gestureEnabled: !prevent });
+
+        // install hardware back handler on Android when preventing
+        let backSub: any = null;
+        if (prevent) {
+            backSub = BackHandler.addEventListener('hardwareBackPress', () => {
+                Alert.alert(
+                    'Leave quiz?',
+                    'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
+                    [
+                        { text: 'Stay', style: 'cancel', onPress: () => {} },
+                        { text: 'Leave', style: 'destructive', onPress: async () => {
+                            const safe = require('../utils/safeDispatch').default;
+                            await safe(navigation, undefined);
+                        } }
+                    ]
+                );
+                return true; // consume the back event
+            });
+        }
+
+        // add a custom headerLeft back button when preventing (ensures JS handles back first)
+        if (prevent) {
+            navigation.setOptions({
+                headerLeft: () => (
+                    <TouchableOpacity onPress={() => {
+                        Alert.alert(
+                            'Leave quiz?',
+                            'You have an in-progress quiz. Are you sure you want to leave? Your progress will be lost.',
+                            [
+                                { text: 'Stay', style: 'cancel', onPress: () => {} },
+                                { text: 'Leave', style: 'destructive', onPress: async () => {
+                                    const safe = require('../utils/safeDispatch').default;
+                                    await safe(navigation, undefined);
+                                } }
+                            ]
+                        );
+                    }} style={{ paddingHorizontal: 12 }}>
+                        <Text style={{ color: '#0a84ff' }}>Back</Text>
+                    </TouchableOpacity>
+                )
+            });
+        } else {
+            navigation.setOptions({ headerLeft: undefined });
+        }
+
+        return () => {
+            if (backSub) backSub.remove && backSub.remove();
+            // restore gesture
+            navigation.setOptions({ gestureEnabled: true, headerLeft: undefined });
+        };
+    }, [navigation, index, score, asvabActive]);
 
     // keep a ref in sync so the listener above sees up-to-date ASVAB state
     // (see below) we update asvabActiveRef after asvabActive is declared
@@ -114,7 +175,6 @@ export default function Quiz({ route, navigation }: Props) {
     }
 
     // ASVAB special mode: if ASVAB was selected, allow starting a timed 30-minute 45-question test
-    const [asvabActive, setAsvabActive] = useState(false);
     const [asvabARSection, setAsvabARSection] = useState<AdaptiveSection | null>(null);
     const [asvabMKSection, setAsvabMKSection] = useState<AdaptiveSection | null>(null);
     const [asvabSection, setAsvabSection] = useState<0 | 1>(0); // 0 = AR, 1 = MK

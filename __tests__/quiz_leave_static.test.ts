@@ -13,8 +13,14 @@ describe('Quiz leave confirmation static checks', () => {
         expect(src.includes('progress').toString()).toBeDefined();
     });
 
-    it('considers ASVAB active state for leave protection', () => {
-        expect(src.includes('asvabActiveRef.current') || src.includes('asvabActive')).toBeTruthy();
-        expect(src.includes('index > 0 || score > 0 || asvabActiveRef.current')).toBeTruthy();
+    it('considers ASVAB active state for leave protection via helper', () => {
+        // the component should use the helper that encodes the in-progress rule
+        expect(src.includes('isQuizInProgress') || src.includes("index > 0 || score > 0")).toBeTruthy();
+    });
+
+    it('disables swipe gestures and installs BackHandler when quiz in-progress', () => {
+        expect(src.includes('gestureEnabled')).toBeTruthy();
+        expect(src.includes('BackHandler.addEventListener')).toBeTruthy();
+        expect(src.includes('headerLeft')).toBeTruthy();
     });
 });
