@@ -123,6 +123,7 @@ export default function Quiz({ route, navigation }: Props) {
     const [secondsLeft, setSecondsLeft] = useState(30 * 60);
     const [currentAsvabQuestion, setCurrentAsvabQuestion] = useState<{ id: string; prompt: string; answer: string; tier: number } | null>(null);
     const [afqtHistory, setAfqtHistory] = useState<any[] | null>(null);
+    const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
     // keep a ref in sync so the beforeRemove listener sees up-to-date ASVAB state
     React.useEffect(() => { asvabActiveRef.current = asvabActive; }, [asvabActive]);
@@ -326,10 +327,19 @@ export default function Quiz({ route, navigation }: Props) {
 
                 <Text style={styles.prompt}>{currentAsvabQuestion ? currentAsvabQuestion.prompt : 'Loading question...'}</Text>
                 {choices.map((c) => (
-                    <TouchableOpacity key={c} style={styles.choice} onPress={() => chooseAsvab(c)}>
+                    <TouchableOpacity key={c} style={[styles.choice, selectedChoice === c ? styles.choiceSelected : null]} onPress={() => setSelectedChoice(c)}>
                         <Text>{c}</Text>
                     </TouchableOpacity>
                 ))}
+
+                <TouchableOpacity testID="submit-asvab" disabled={!selectedChoice} style={[styles.submitButton, !selectedChoice ? styles.submitDisabled : null]} onPress={() => {
+                    if (!selectedChoice) return;
+                    // submit the selected answer
+                    chooseAsvab(selectedChoice);
+                    setSelectedChoice(null);
+                }}>
+                    <Text style={{ color: '#fff' }}>Submit Answer</Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -349,10 +359,14 @@ export default function Quiz({ route, navigation }: Props) {
             </Text>
 
             {choices.map((c) => (
-                <TouchableOpacity key={c} style={styles.choice} onPress={() => choose(c)}>
+                <TouchableOpacity key={c} style={[styles.choice, selectedChoice === c ? styles.choiceSelected : null]} onPress={() => setSelectedChoice(c)}>
                     <Text>{c}</Text>
                 </TouchableOpacity>
             ))}
+
+            <TouchableOpacity testID="submit-answer" disabled={!selectedChoice} style={[styles.submitButton, !selectedChoice ? styles.submitDisabled : null]} onPress={() => { if (selectedChoice) { choose(selectedChoice); setSelectedChoice(null); } }}>
+                <Text style={{ color: '#fff' }}>Submit Answer</Text>
+            </TouchableOpacity>
 
             {feedbackVisible && (
                 <View style={styles.feedbackOverlay}>
@@ -377,8 +391,22 @@ const styles = StyleSheet.create({
     container: { flex: 1, padding: 16 },
     header: { fontSize: 18, fontWeight: '600', marginBottom: 8, width: '80%' },
     prompt: { fontSize: 16, marginVertical: 12 },
-    choice: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 8 }
-    ,
+    choice: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 8 },
+    choiceSelected: {
+        borderColor: '#0066ff',
+        borderWidth: 2,
+        backgroundColor: '#e9f0ff'
+    },
+    submitButton: {
+        marginTop: 12,
+        padding: 12,
+        backgroundColor: '#0066ff',
+        borderRadius: 8,
+        alignItems: 'center'
+    },
+    submitDisabled: {
+        backgroundColor: '#ccc'
+    },
     feedbackOverlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
     feedbackCard: { backgroundColor: '#fff', padding: 16, borderRadius: 10, width: '85%', maxWidth: 500, alignItems: 'center' }
     ,
