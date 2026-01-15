@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert } from 'react-native';
 import React from 'react';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -14,7 +14,17 @@ export default function Home({ navigation }: Props) {
 
             <View style={styles.buttons}>
                 <Button title="Flashcards" onPress={() => navigation.navigate('Flashcards', { subjects: 'All' })} />
-                <Button title="Take a Quiz" onPress={() => navigation.navigate('Quiz', { subjects: 'All' })} />
+                <Button title="Take a Quiz" onPress={() => {
+                    Alert.alert(
+                        'Choose quiz',
+                        'Which quiz would you like to take?',
+                        [
+                            { text: 'Formula Quiz', onPress: () => navigation.navigate('Quiz', { subjects: 'All' }) },
+                            { text: 'ASVAB Math Quiz', onPress: () => navigation.navigate('Quiz', { subjects: ['ASVAB'] }) },
+                            { text: 'Cancel', style: 'cancel' }
+                        ]
+                    );
+                }} />
                 <Button title="Choose Subjects" onPress={() => navigation.navigate('Subjects')} />
                 <Button title="History" onPress={() => navigation.navigate('History')} />
                 <Button title="Stats Overview" onPress={() => navigation.navigate('Stats')} />

@@ -4,7 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { cards, cardsForSubjects } from '../data/cards';
-import { buildAsvabPool, computeAfqtEstimate } from '../utils/asvab';
+import { computeAfqtEstimate } from '../utils/asvab';
+import AdaptiveSection from '../utils/adaptiveAsvab';
+import { generateChoices } from '../utils/choiceGenerator';
 import { explainFormula } from '../utils/formulaExplain';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
@@ -20,9 +22,11 @@ export default function Quiz({ route, navigation }: Props) {
     const [index, setIndex] = useState(0);
     const [score, setScore] = useState(0);
     // ask confirmation when user tries to leave mid-quiz
+    const asvabActiveRef = React.useRef(false);
+
     React.useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-            const inProgress = index > 0 || score > 0;
+            const inProgress = index > 0 || score > 0 || asvabActiveRef.current;
             if (!inProgress) return; // allow leaving if nothing done yet
 
             // Prevent default behavior of leaving the screen
@@ -48,6 +52,9 @@ export default function Quiz({ route, navigation }: Props) {
 
         return unsubscribe;
     }, [navigation, index, score]);
+
+    // keep a ref in sync so the listener above sees up-to-date ASVAB state
+    // (see below) we update asvabActiveRef after asvabActive is declared
     const [countsByType, setCountsByType] = useState<Record<string, { correct: number; total: number }>>({ definition: { correct: 0, total: 0 }, shape: { correct: 0, total: 0 }, word: { correct: 0, total: 0 } });
     const [feedbackVisible, setFeedbackVisible] = useState(false);
     const [feedbackPlain, setFeedbackPlain] = useState<string | null>(null);
@@ -61,39 +68,28 @@ export default function Quiz({ route, navigation }: Props) {
     // build choices: show only the right-hand side of formulas (RHS) or plain-English definitions;
     // mix formulas and plain-English distractors but only one choice is correct
     const { choices, correctText } = useMemo(() => {
-        function rhsOf(answer: string) {
-            if (!answer) return '';
-            const parts = String(answer).split('=');
-            if (parts.length >= 2) return parts.slice(1).join('=').trim();
-            return answer.trim();
-        }
-
-        // helper to get a plain-English explanation for a card (prefer explainFormula)
-        function plainOf(c: typeof card) {
-            const expl = explainFormula(c as any);
-            if (expl) return expl;
-            const r = rhsOf(c.answer as string);
-            return `This is calculated as ${r}`;
-        }
-
-        // pick whether the correct answer will be plain-English or RHS (formula)
-        const correctIsPlain = Math.random() < 0.5 && Boolean(plainOf(card));
-        const correctText = correctIsPlain ? plainOf(card) : rhsOf(card.answer as string);
-        // build a pool of distractor texts (mix of plain and rhs from other cards)
-        const distractorPool: string[] = [];
-        pool.filter((c) => c.id !== card.id).forEach((c) => {
-            const r = rhsOf(c.answer as string);
-            const p = plainOf(c as any);
-            if (r) distractorPool.push(r);
-            if (p) distractorPool.push(p);
-        });
-
-        // remove duplicates and the correct text
-        const uniq = Array.from(new Set(distractorPool.filter((t) => t && t !== correctText)));
-
-        const picks = shuffle(uniq).slice(0, 3);
-        const all = shuffle([correctText, ...picks]);
-        return { choices: all, correctText };
+        // derive a difficulty tier heuristic from card subject/type
+        const subjectTierMap: Record<string, number> = {
+            Arithmetic: 1,
+            'Pre-Algebra': 2,
+            Algebra: 3,
+            Geometry: 3,
+            'Word Problems': 3,
+            Fractions: 2,
+            Decimals: 2,
+            'Mixed Numbers': 2,
+            'Solve for X': 3,
+            ASVAB: 4
+        };
+        const tier = subjectTierMap[(card as any).subject] ?? 1;
+        const extracted = (() => {
+            // if answer includes an equals sign, try to pick the RHS
+            const a = String((card as any).answer || '');
+            const parts = a.split('=');
+            return parts.length >= 2 ? parts.slice(1).join('=').trim() : a.trim();
+        })();
+        const g = generateChoices(extracted, tier);
+        return { choices: g.choices, correctText: g.choices[g.correctIndex] };
     }, [card, pool]);
 
     function choose(choice: string) {
@@ -119,64 +115,77 @@ export default function Quiz({ route, navigation }: Props) {
 
     // ASVAB special mode: if ASVAB was selected, allow starting a timed 30-minute 45-question test
     const [asvabActive, setAsvabActive] = useState(false);
-    const [asvabQuestions, setAsvabQuestions] = useState<typeof pool>([]);
-    const [asvabIndex, setAsvabIndex] = useState(0);
+    const [asvabARSection, setAsvabARSection] = useState<AdaptiveSection | null>(null);
+    const [asvabMKSection, setAsvabMKSection] = useState<AdaptiveSection | null>(null);
+    const [asvabSection, setAsvabSection] = useState<0 | 1>(0); // 0 = AR, 1 = MK
+    // index not used in adaptive mode; questions are provided by AdaptiveSection
     const [asvabScore, setAsvabScore] = useState(0);
     const [secondsLeft, setSecondsLeft] = useState(30 * 60);
+    const [currentAsvabQuestion, setCurrentAsvabQuestion] = useState<{ id: string; prompt: string; answer: string; tier: number } | null>(null);
     const [afqtHistory, setAfqtHistory] = useState<any[] | null>(null);
+
+    // keep a ref in sync so the beforeRemove listener sees up-to-date ASVAB state
+    React.useEffect(() => { asvabActiveRef.current = asvabActive; }, [asvabActive]);
 
     // Memoize ASVAB choices so they are stable while viewing a question.
     // This must be declared unconditionally (not inside a conditional render)
     // to preserve hook order across renders.
     const { choices: asvabChoices, correctText: asvabCorrectText } = React.useMemo(() => {
-        if (!asvabQuestions || !asvabQuestions.length) return { choices: [] as string[], correctText: '' };
-        const card = asvabQuestions[asvabIndex];
-        function rhsOf(answer: string) {
-            if (!answer) return '';
-            const parts = String(answer).split('=');
-            if (parts.length >= 2) return parts.slice(1).join('=').trim();
-            return answer.trim();
-        }
-        function plainOf(c: typeof card) {
-            const expl = explainFormula(c as any);
-            if (expl) return expl;
-            const r = rhsOf(c.answer as string);
-            return `This is calculated as ${r}`;
-        }
-        const correctIsPlain = Math.random() < 0.5 && Boolean(plainOf(card));
-        const correctText = correctIsPlain ? plainOf(card) : rhsOf(card.answer as string);
-        const distractorPool: string[] = [];
-        asvabQuestions.filter((c) => c.id !== card.id).forEach((c) => {
-            const r = rhsOf(c.answer as string);
-            const p = plainOf(c as any);
-            if (r) distractorPool.push(r);
-            if (p) distractorPool.push(p);
-        });
-        const uniq = Array.from(new Set(distractorPool.filter((t) => t && t !== correctText)));
-        const picks = shuffle(uniq).slice(0, 3);
-        const all = shuffle([correctText, ...picks]);
-        return { choices: all, correctText };
-    }, [asvabIndex, asvabQuestions]);
+        const card = currentAsvabQuestion;
+        if (!card) return { choices: [] as string[], correctText: '' };
+        const g = generateChoices(card.answer, card.tier + 1);
+        return { choices: g.choices, correctText: g.choices[g.correctIndex] };
+    }, [currentAsvabQuestion]);
 
     // timer effect for ASVAB when active
     React.useEffect(() => {
         if (!asvabActive) return;
         if (secondsLeft <= 0) {
-            // time up, finish
-            finishAsvab(asvabScore, asvabQuestions.length);
+            // time up for current section
+            // finish or move to next section
+            if (asvabSection === 0) {
+                // move to MK
+                setAsvabSection(1);
+                setSecondsLeft(15 * 60);
+                // prime MK question
+                if (asvabMKSection) {
+                    const next = asvabMKSection.nextQuestion();
+                    if (next.q) setCurrentAsvabQuestion({ id: next.q.id, prompt: next.q.prompt, answer: next.q.answer, tier: next.tier });
+                }
+            } else {
+                // both sections done
+                const totalQ = (asvabARSection ? asvabARSection.askedCounts.reduce((a,b)=>a+b,0):0) + (asvabMKSection ? asvabMKSection.askedCounts.reduce((a,b)=>a+b,0):0);
+                finishAsvab(asvabScore, totalQ);
+            }
             return;
         }
         const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
         return () => clearTimeout(t);
-    }, [asvabActive, secondsLeft]);
+    }, [asvabActive, secondsLeft, asvabSection, asvabARSection, asvabMKSection, asvabScore]);
 
     function startAsvab() {
-        const q = buildAsvabPool(cards, 45, 10);
-        setAsvabQuestions(q);
-        setAsvabActive(true);
-        setAsvabIndex(0);
+        // build adaptive sections from test_questions JSON
+        const tq = require('../data/test_questions.json');
+        const arTiers: any[] = [];
+        const mkTiers: any[] = [];
+        for (let i = 1; i <= 6; i++) {
+            arTiers.push((tq.arithmetic_reasoning as any)[`tier_${i}`] || []);
+            mkTiers.push((tq.mathematics_knowledge as any)[`tier_${i}`] || []);
+        }
+        const mapQ = (arr: any[]) => arr.map((x) => ({ id: x.id, prompt: x.question, answer: x.answer }));
+        const arSections = arTiers.map((t: any[]) => mapQ(t));
+        const mkSections = mkTiers.map((t: any[]) => mapQ(t));
+        const arSec = new AdaptiveSection(arSections, 2);
+        const mkSec = new AdaptiveSection(mkSections, 2);
+        setAsvabARSection(arSec);
+        setAsvabMKSection(mkSec);
+        setAsvabSection(0);
         setAsvabScore(0);
+        setAsvabActive(true);
         setSecondsLeft(30 * 60);
+        // prime first question
+        const first = arSec.nextQuestion();
+        if (first.q) setCurrentAsvabQuestion({ id: first.q.id, prompt: first.q.prompt, answer: first.q.answer, tier: first.tier });
     }
 
     async function finishAsvab(finalCorrect: number, totalQuestions: number) {
@@ -256,7 +265,7 @@ export default function Quiz({ route, navigation }: Props) {
         return (
             <View style={styles.container}>
                 <Text style={styles.header}>ASVAB Practice Test</Text>
-                <Text style={{ marginBottom: 12 }}>This is a timed 30-minute practice test of 45 questions drawn from Arithmetic Reasoning and Math Knowledge (we'll include word problems).</Text>
+                <Text style={{ marginBottom: 12 }}>This test has two timed sections: Arithmetic Reasoning (AR) — 30 minutes, and Math Knowledge (MK) — 15 minutes. Each section completes when its timer expires; the overall AFQT estimate is computed after both sections finish.</Text>
                 <Button title="Start ASVAB Practice Test" onPress={startAsvab} />
                 <View style={{ height: 12 }} />
                 <Button title="View AFQT History" onPress={() => loadAfqtHistory()} />
@@ -272,34 +281,50 @@ export default function Quiz({ route, navigation }: Props) {
     }
 
     if (isAsvabSelected && asvabActive) {
-        const card = asvabQuestions[asvabIndex];
-
-        // Use the memoized ASVAB choices computed above; they are stable while the
-        // question is active even if the timer ticks.
+        const sectionTitle = asvabSection === 0 ? 'Arithmetic Reasoning (AR)' : 'Math Knowledge (MK)';
         const choices = asvabChoices;
         const correctText = asvabCorrectText;
 
-        function chooseAsvab(choice: string) {
+        async function chooseAsvab(choice: string) {
             const correct = choice === correctText;
             if (correct) setAsvabScore((s) => s + 1);
-            // advance
-            const next = asvabIndex + 1;
-            if (next >= asvabQuestions.length) {
-                finishAsvab(asvabScore + (correct ? 1 : 0), asvabQuestions.length);
-            } else {
-                setAsvabIndex(next);
+            const sec = asvabSection === 0 ? asvabARSection : asvabMKSection;
+            if (sec && currentAsvabQuestion) {
+                sec.submitAnswer(currentAsvabQuestion.tier, correct);
+                // try to get next question from same section
+                const nextQ = sec.nextQuestion();
+                if (nextQ.q) {
+                    setCurrentAsvabQuestion({ id: nextQ.q.id, prompt: nextQ.q.prompt, answer: nextQ.q.answer, tier: nextQ.tier });
+                    return;
+                }
+                // no more q in this section: move to next or finish
+                if (asvabSection === 0) {
+                    // move to MK
+                    setAsvabSection(1);
+                    setSecondsLeft(15 * 60);
+                    if (asvabMKSection) {
+                        const mkNext = asvabMKSection.nextQuestion();
+                        if (mkNext.q) setCurrentAsvabQuestion({ id: mkNext.q.id, prompt: mkNext.q.prompt, answer: mkNext.q.answer, tier: mkNext.tier });
+                        else {
+                            const totalQ = (asvabARSection ? asvabARSection.askedCounts.reduce((a,b)=>a+b,0):0) + (asvabMKSection ? asvabMKSection.askedCounts.reduce((a,b)=>a+b,0):0);
+                            finishAsvab(asvabScore + (correct ? 1 : 0), totalQ);
+                        }
+                    }
+                } else {
+                    const totalQ = (asvabARSection ? asvabARSection.askedCounts.reduce((a,b)=>a+b,0):0) + (asvabMKSection ? asvabMKSection.askedCounts.reduce((a,b)=>a+b,0):0);
+                    finishAsvab(asvabScore + (correct ? 1 : 0), totalQ);
+                }
             }
         }
 
         return (
             <View style={styles.container}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
-                    <Text>ASVAB Test</Text>
+                    <Text>{sectionTitle}</Text>
                     <Text>Time: {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}</Text>
                 </View>
 
-                <Text style={styles.prompt}>Question {asvabIndex + 1}/{asvabQuestions.length}</Text>
-                <Text style={styles.prompt}>{card.prompt}</Text>
+                <Text style={styles.prompt}>{currentAsvabQuestion ? currentAsvabQuestion.prompt : 'Loading question...'}</Text>
                 {choices.map((c) => (
                     <TouchableOpacity key={c} style={styles.choice} onPress={() => chooseAsvab(c)}>
                         <Text>{c}</Text>

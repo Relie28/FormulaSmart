@@ -93,6 +93,14 @@ This project now includes a simple flashcard and quiz module to help practice fo
 - **Flashcards**: Tap a card to flip between the prompt and the answer. For shape prompts, a small shape preview is shown. Word problems include a **Show hint** button on the front of the card.
 - **Quiz**: Multiple-choice quiz mode pulls questions from the selected subjects. Select an answer to advance; hints are shown automatically for incorrect word-problem answers.
 
+### ASVAB Practice Test (Math)
+
+- The ASVAB Math practice test consists of two timed sections:
+	- **Arithmetic Reasoning (AR)** — 30 minutes (30 questions)
+	- **Mathematics Knowledge (MK)** — 15 minutes (15 questions)
+- Each section runs independently: when a section's timer expires the section is automatically completed (even if some questions remain unanswered). The test then proceeds to the next section. When both sections finish, the app computes an estimated AFQT score based on the total correct answers across both sections and saves it to your AFQT history.
+- You can start the ASVAB practice test from the **Home** screen ("Take a Quiz" → "ASVAB Math Quiz") or from **Choose Subjects** by selecting **ASVAB**.
+
 - **Quiz scoring & history**: When a quiz finishes, the app saves the session (subjects, score, total, timestamp). View chronological sessions in **History**, and see an overall per-subject strength/weakness summary in **Stats Overview**. Use **Settings → Clear saved quiz scores** to clear data.
 
 - **Stats Overview**: Shows per-subject performance aggregated from quiz and flashcard sessions. For each subject you'll see average accuracy, a simple improvement/decline trend, and a per-type breakdown (Formulas/Definitions, Geometry, Word Problems) so you can see where to focus practice.
