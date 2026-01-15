@@ -93,11 +93,112 @@ This project now includes a simple flashcard and quiz module to help practice fo
 - **Flashcards**: Tap a card to flip between the prompt and the answer. For shape prompts, a small shape preview is shown. Word problems include a **Show hint** button on the front of the card.
 - **Quiz**: Multiple-choice quiz mode pulls questions from the selected subjects. Select an answer to advance; hints are shown automatically for incorrect word-problem answers.
 
+---
+
+## ASVAB, Adaptive Tiers & Multiple-Choice Logic 🔧
+
+This app includes a full ASVAB-style Math practice mode and deterministic logic to generate plausible multiple-choice distractors that match difficulty tiers so the same behavior can be replicated on web.
+
+### ASVAB two-section behavior ✅
+
+- Two timed sections:
+  - **Arithmetic Reasoning (AR)** — 30 minutes
+  - **Mathematics Knowledge (MK)** — 15 minutes
+- Each section is served by a tiered adaptive engine (see `src/utils/adaptiveAsvab.ts`). When a section timer expires the section completes and the app proceeds to the next section; after both finish an AFQT estimate is computed and saved.
+
+### Adaptive tiers (high level) ⚡
+
+- Content is organized into 6 tiers (Tier 1 .. Tier 6) and each question knows its tier in `src/data/test_questions.json`.
+- Adaptive rules (implemented in `AdaptiveSection`):
+  - Start in a middle tier (Tier 3) for new sections.
+  - Questions are drawn from the current tier; when a tier is exhausted, the engine evaluates tier performance and either promotes, demotes, or stays based on percent-correct thresholds.
+  - Fast-track: 2 consecutive correct answers will serve a higher-tier question (if available).
+  - Hint mode can be enabled for remediation after repeated failures in the same tier.
+
+### Multiple-choice generation rules (A–D; single correct) 🎯
+
+We implemented reusable logic to generate four plausible choices for each question in `src/utils/choiceGenerator.ts`.
+
+Core rules:
+
+- Exactly 4 choices: one correct + three plausible distractors.
+- Distractors are generated to reflect common errors (not random): arithmetic slips, conceptual/formula errors, partial/intermediate results, or rounding/estimation mistakes.
+- The distractor types are tier-aware:
+  - Tier 1: obvious arithmetic slips and rounding errors
+  - Tier 2: single-step traps (misapplied operation or misplaced denominator)
+  - Tier 3: multi-step confusions (partial/step-miss answers)
+  - Tier 4: conceptual interference (wrong context/ratio)
+  - Tier 5: precision/neighbour numeric traps
+  - Tier 6: ASVAB "killer" distractors (close neighbors requiring conceptual clarity)
+
+Algorithm summary (pseudo):
+
+```
+FUNCTION generateChoices(correctAnswer, tier):
+  SET distractors = []
+  ADD arithmeticError(correctAnswer)
+  ADD conceptualError(correctAnswer)
+  IF tier >= 3:
+    ADD partialSolution(correctAnswer)
+  ELSE:
+    ADD roundingError(correctAnswer)
+  SHUFFLE [correctAnswer + distractors]
+  RETURN choices
+```
+
+Each distractor generator attempts to preserve units (e.g., "$", "%", "mph") and produce values that are close to the correct answer but wrong for plausible reasons. The generator returns a `distractor_logic` map to explain the trap (useful for analytics/authoring).
+
+### Submit flow & UX
+
+- Answers are not auto-submitted on tap. The app requires the user to select a choice and then press **Submit Answer** to confirm. This prevents accidental advances and makes the UI consistent across ASVAB and regular quizzes.
+- The submit button is disabled until a choice is selected and visually highlights the selected choice.
+
+### Leave protection
+
+- If the user attempts to navigate away mid-quiz (Flashcards or ASVAB), the app shows a confirmation alert "Leave quiz?" warning that progress will be lost. This is implemented via a `beforeRemove` listener in `src/screens/Quiz.tsx` and respects both normal quizzes and an active ASVAB test.
+
+### Files of interest
+
+- `src/utils/choiceGenerator.ts` — choice generation algorithm and distractor types.
+- `src/utils/adaptiveAsvab.ts` — tier-based AdaptiveSection implementation.
+- `src/data/test_questions.json` — tiered ASVAB question bank.
+- `src/screens/Quiz.tsx` — wiring for ASVAB, adaptive flow, timers, Submit UI and 'beforeRemove' leave protection.
+
+---
+
+## Testing & Replicating on Web 🧪
+
+We included tests that exercise the deterministic generation logic and important regressions so the same behavior can be reproduced on web.
+
+- Run the full test suite locally:
+
+```bash
+npm test
+```
+
+- Key tests to validate the features above:
+  - `__tests__/choiceGenerator.test.ts` — asserts 4 choices, tier-dependent distractors and reasonable distribution of correct positions.
+  - `__tests__/test_questions_filename.test.ts` — protects against filename-case regressions for the `test_questions.json` import.
+  - `__tests__/quiz_leave_static.test.ts` — static checks for the leave-confirmation protection.
+  - `__tests__/quiz_submit_static.test.ts` — verifies Submit button/signature is present in source.
+
+### Reproducing on Web
+
+1. Port `src/utils/choiceGenerator.ts` and `src/utils/adaptiveAsvab.ts` to the web environment (they are pure JS/TS helpers without native dependencies).
+2. Reuse `src/data/test_questions.json` as a shared source of truth.
+3. Add tests in your web test runner referencing the same utility functions (the unit tests are deterministic and should pass in Node/browser test environments).
+
+Tip: Keep `distractor_logic` recorded during submissions to capture analytics and evaluate which traps are most effective.
+
+---
+
+If you'd like, I can also add a small guide/example to the README that shows how to port the choice-generation and adaptive logic to a Node/React web project with example tests (Jest) and fixtures.
+
 ### ASVAB Practice Test (Math)
 
 - The ASVAB Math practice test consists of two timed sections:
-	- **Arithmetic Reasoning (AR)** — 30 minutes (30 questions)
-	- **Mathematics Knowledge (MK)** — 15 minutes (15 questions)
+  - **Arithmetic Reasoning (AR)** — 30 minutes (30 questions)
+  - **Mathematics Knowledge (MK)** — 15 minutes (15 questions)
 - Each section runs independently: when a section's timer expires the section is automatically completed (even if some questions remain unanswered). The test then proceeds to the next section. When both sections finish, the app computes an estimated AFQT score based on the total correct answers across both sections and saves it to your AFQT history.
 - You can start the ASVAB practice test from the **Home** screen ("Take a Quiz" → "ASVAB Math Quiz") or from **Choose Subjects** by selecting **ASVAB**.
 
